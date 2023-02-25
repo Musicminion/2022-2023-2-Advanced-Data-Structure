@@ -38,9 +38,17 @@ void SparseMatrix::to_file(const std::string output_file) {
   outfile.close();
 }
 
-// 
-SparseMatrix SparseMatrix::operator*(const SparseMatrix &right) {
+// 简要介绍一下我的实现思路，因为我是map存储的
+// map rowColMap[X][Y] = value, X is row, Y is col
+// map colRowMap[Y][X] = value, X is row, Y is col
+// 做乘法的时候首先，遍历行，再在每一行里面遍历不为0的列，然后和要做乘法的right做比较，
+// 比如第一行，第三列不为0，那就去找右边right的第三行，去里面看不为0的，然后做乘法，如果发现right的第3行 第5列
+// 不是0，那好，最终的结果第一行、第五列的结果就是【上面两个矩阵对应元素的】乘积
+// 写入到对应的矩阵即可
+SparseMatrix SparseMatrix::operator*(SparseMatrix &right) {
   /* TODO: Your code here. */
+  clock_t start,end;
+  start = clock();
   try
   {
     /* check if they can be multied */
@@ -50,25 +58,18 @@ SparseMatrix SparseMatrix::operator*(const SparseMatrix &right) {
     SparseMatrix result;
     result.setRowNum(_row);
     result.setColNum(right._col);
-    /* continue to do muiliple*/
-    /* tranverse by ROW, From Row[0] to Row[END] */ 
-    for(auto iterX = rowColMap.begin(); iterX != rowColMap.end(); iterX++){
-      /* tranverse by Col */ 
-      // std::cout << "@" << std::endl;
-      for(auto iterY = iterX->second.begin(); iterY !=iterX->second.end(); iterY++){
-        // Now array[iterX->first][iterY->first] must match rightArray[iterY->first][??]
-        // ?? is the final result array and we use for to find ??
-        // outfile << iterX->first << " " << iterY -> first << " " << iterY ->second  << "\n";
-        if(right.rowColMap.count(iterY -> first) == 1){
-          auto zTarget =right.rowColMap.find(iterY -> first);
-          
-          for(auto iterZ = zTarget -> second.begin(); iterZ != zTarget ->second.end(); iterZ++){
-            result.elementAddNum(iterX->first, iterZ->first, (iterZ->second) * (iterY ->second) );
-          }
-        }
 
+    for(int i = 0; i < _row; i++){
+      for(int j = 0; j< right._col; j++){
+        int sum = 0;
+        for(int k = 0; k < _col; k++){
+          sum += this->rowColMap[i][k] * right.getElementNum(k, j);
+        }
+        result.elementAddNum(i, j, sum);
       }
     }
+    end = clock();
+    std::cout << double(end - start) / CLOCKS_PER_SEC << "s" << std::endl;
     return result; 
   }
   catch(const std::exception& e)
@@ -96,7 +97,6 @@ void SparseMatrix::elementAddNum(int  rowIndex, int colIndex, int num){
   }
 }
 
-
 void SparseMatrix::setRowNum(int rowNum){
   this->_row = rowNum;
 };
@@ -104,3 +104,6 @@ void SparseMatrix::setColNum(int colNum){
   this->_col = colNum;
 };
 
+int SparseMatrix::getElementNum(int rowIndex, int colIndex){
+  return this->colRowMap[rowIndex][colIndex];
+}
