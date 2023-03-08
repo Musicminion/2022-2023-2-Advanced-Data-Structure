@@ -1,12 +1,22 @@
 #pragma once
 
 #include "kvstore_api.h"
+#include "memtable.h"
+#include <map>
+#include <string>
+
+const bool Tiering = 0;
+const bool Leveling = 1;
 
 class KVStore : public KVStoreAPI {
 	// You can add your implementation here
 private:
-
+	void readConfig(std::string path);
+	std::map<uint64_t, uint64_t> config_level_limit;
+	std::map<uint64_t, bool> config_level_type;
+	MemTable * memTable;
 public:
+	// ********************************************************
 	KVStore(const std::string &dir);
 
 	~KVStore();
@@ -20,4 +30,5 @@ public:
 	void reset() override;
 
 	void scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string> > &list) override;
+
 };

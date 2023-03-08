@@ -32,3 +32,7 @@ For the test files, of course you could modify it to debug your programs. But re
 
 Good luck :)
 
+### 代码时间日志
+- 先把跳表（SkipList）的写好解决，测试：常见的插入、删除、遍历、操作，保证正常然后下一步【3.8日】
+- 规划项目架构（确定项目需要的类和层级依赖关系）
+- 
