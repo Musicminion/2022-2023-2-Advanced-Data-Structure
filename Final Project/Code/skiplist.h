@@ -104,7 +104,7 @@ Skiplist<K,V>::~Skiplist(){
 // 插入节点
 template<typename K, typename V>
 Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
-    std::map<int, std::vector<Node<K,V>*>> findPath;
+    std::map<int, std::vector<Node<K,V>*> > findPath;
     // 如果这个节点已经存在，根据要求需要替换里面的数据
     Node<K,V>* tryFind = this->findNode(elemKey);
     if(tryFind != NULL){
@@ -241,7 +241,7 @@ Node<K,V>* Skiplist<K,V>::findNode(K elemKey){
 // 删除节点
 template<typename K, typename V>
 void Skiplist<K,V>::deleteNode(K elemKey){
-    std::map<int, std::vector<Node<K,V>*>> findPath;
+    std::map<int, std::vector<Node<K,V>*> > findPath;
     // 如果这个节点已经存在，根据要求需要替换里面的数据
     Node<K,V>* delNode = this->findNode(elemKey);
     if(delNode == NULL)
