@@ -173,7 +173,7 @@ Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
         // 从小到大遍历经过的路径容器
         int level = mapIter->first;
         // 如果层数超过了newNode的层数，退出
-        if(level >= newNode->next.size())
+        if(level >= (int)newNode->next.size())
             break;
         // 寻找每一层最接近那个新插入的节点的节点
         Node<K,V>* levelLastNode = mapIter->second[mapIter->second.size() - 1];
@@ -185,7 +185,7 @@ Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
     // 所以，还需要更新新插入节点的 next 容器！
     for(int i = 0; i < newNode_level; i++){
         // 从底层往上面爬楼，当前的这一层楼，已经超过iterNext的楼层数量 i > iterNext->next.size() - 1
-        while(iterNext->type != nodeType_End && i + 1 > iterNext->next.size()){
+        while(iterNext->type != nodeType_End && i + 1 > (int)iterNext->next.size()){
             // 执行 iterNext 的跳跃操作！
             // 是否会丢失？不会，因为我们是从下往上更新的，不需要担心丢失原来的iterNext
             iterNext = iterNext->next[iterNext->next.size() - 1];
@@ -305,7 +305,7 @@ void Skiplist<K,V>::deleteNode(K elemKey){
     //  --------          --------       ---------------------
     Node<K,V>* delNodeNext  = delNode->next[0];
 
-    for(int i = 0; i < std::min(delNodeNext->next.size(), iter->next.size()); i++){
+    for(long unsigned int i = 0; i < std::min(delNodeNext->next.size(), iter->next.size()); i++){
         iter->next[i] = delNodeNext;
     }
 
@@ -316,7 +316,7 @@ void Skiplist<K,V>::deleteNode(K elemKey){
         // 寻找每一层最接近那个新插入的节点的节点
         Node<K,V>* levelLastNode = mapIter->second[mapIter->second.size() - 1];
 
-        while(delNodeNext->type != nodeType_End && level + 1 > delNodeNext->next.size()){
+        while(delNodeNext->type != nodeType_End && level + 1 > (int)delNodeNext->next.size()){
             delNodeNext = delNodeNext->next[delNodeNext->next.size() - 1];
         }
 
@@ -372,7 +372,7 @@ void Skiplist<K,V>::tranverse(){
         if(iter->type == nodeType_Head){
             std::cout << "Head level [";
 
-            for(int i = 0; i < iter->next.size(); i++){
+            for(size_t i = 0; i < iter->next.size(); i++){
                 if(iter->next[i]->type == nodeType_End)
                     std::cout << "END, ";
                 else if(iter->next[i]->type == nodeType_Data)
@@ -388,7 +388,7 @@ void Skiplist<K,V>::tranverse(){
         // 输出当前的值
         std::cout << "key: " << iter->key << " value: " << iter->val;
         std::cout << " level[ ";
-        for(int i = 0; i < iter->next.size(); i++){
+        for(size_t i = 0; i < iter->next.size(); i++){
             if(iter->next[i]->type == nodeType_End)
                 std::cout << "END, ";
             else if(iter->next[i]->type == nodeType_Data)
