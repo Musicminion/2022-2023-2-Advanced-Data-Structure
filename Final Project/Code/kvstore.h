@@ -2,6 +2,7 @@
 
 #include "kvstore_api.h"
 #include "memtable.h"
+#include "sstable.h"
 #include <map>
 #include <string>
 
@@ -11,10 +12,18 @@ const bool Leveling = 1;
 class KVStore : public KVStoreAPI {
 	// You can add your implementation here
 private:
-	void readConfig(std::string path);
+	// 保存每一层的sst文件的数量限制
 	std::map<uint64_t, uint64_t> config_level_limit;
+	// 保存每一层的类型，Tiering-0，Leveling-1
 	std::map<uint64_t, bool> config_level_type;
-	MemTable * memTable;
+	// 保存每一层的索引，
+	std::map<uint64_t, std::map<uint64_t, SStable<u_int64_t, std::string> *> > ssTableIndex;
+
+	MemTable<uint64_t, std::string> * memTable;
+
+	void readConfig(std::string path); 
+	void sstFileCheck(std::string dataPath);
+
 public:
 	// ********************************************************
 	KVStore(const std::string &dir);

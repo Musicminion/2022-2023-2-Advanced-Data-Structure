@@ -4,6 +4,8 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
+#include <climits>
+#include <cassert>
 #include <map>
 #include <list>
 

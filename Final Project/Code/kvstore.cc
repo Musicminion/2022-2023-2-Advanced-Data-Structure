@@ -1,19 +1,28 @@
 #include "kvstore.h"
+#include "utils.h"
 #include <string>
 #include <fstream>
 #include <iostream>
 
+const std::string confFilePath = "./default.conf";
 
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
 {
 	// 读取配置文件
-	this->readConfig("./default.conf");
+	this->readConfig(confFilePath);
+	// 根据配置文件执行文件检查，如果存在文件，就读取到缓存
+	this->sstFileCheck(dir);
+
+
 	// 创建MemTable
-	this->memTable = new MemTable();
+	this->memTable = new MemTable<u_int64_t, std::string>();
 }
+
 
 KVStore::~KVStore()
 {
+	
+
 	delete this->memTable;
 }
 
@@ -62,9 +71,10 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
 	this->memTable->scan(key1, key2, list);
 }
 
+
 /** 
  * 阅读配置文件，并且写入到相关变量中
- * Path 配置文件的相对路径
+ * @param path : 配置文件的路径(相对路径，默认为"./default.conf")
 */
 void KVStore::readConfig(std::string path){
 	std::ifstream infile;
@@ -82,4 +92,29 @@ void KVStore::readConfig(std::string path){
 	}
 
 	infile.close();
+}
+
+
+/** 
+ * 根据阅读的配置文件，检查相关目录下面的sst文件
+ * @param dataPath : 数据文件的目录，会在这个目录下面根据配置文件检查level-X目录
+ * 检查完成之后，会尝试读取不同层里面可能存在的sst文件，如果有的话读取，没有的话不读取
+*/
+void KVStore::sstFileCheck(std::string dataPath){
+	std::cout << dataPath << std::endl;
+
+	// 检查dataPath是否存在，没有的就创建
+	if(!utils::dirExists(dataPath))
+		utils::mkdir(dataPath.c_str());
+
+	// 根据配置文件，检查level-i文件夹是否存在
+	for(auto iter = config_level_limit.begin(); iter != config_level_limit.end(); iter++){
+		// 拼接第level-i层的文件
+		std::string levelPathStr = dataPath + "/" + "level-" + std::to_string(iter->first);
+		// 判断目录是否存在，不存在创建
+		if(!utils::dirExists(levelPathStr)){
+			utils::mkdir(levelPathStr.c_str());
+		}
+	}
+
 }
