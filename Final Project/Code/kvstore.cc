@@ -1,9 +1,7 @@
 #include "kvstore.h"
-#include "utils.h"
-#include <string>
-#include <fstream>
-#include <iostream>
 
+const bool Tiering = 0;
+const bool Leveling = 1;
 const std::string confFilePath = "./default.conf";
 
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
@@ -13,15 +11,13 @@ KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
 	// 根据配置文件执行文件检查，如果存在文件，就读取到缓存
 	this->sstFileCheck(dir);
 
-
 	// 创建MemTable
-	this->memTable = new MemTable<u_int64_t, std::string>();
+	this->memTable = new MemTable();
 }
 
 
 KVStore::~KVStore()
 {
-	
 
 	delete this->memTable;
 }

@@ -3,11 +3,11 @@
 #include "kvstore_api.h"
 #include "memtable.h"
 #include "sstable.h"
-#include <map>
+#include "utils.h"
 #include <string>
-
-const bool Tiering = 0;
-const bool Leveling = 1;
+#include <fstream>
+#include <iostream>
+#include <map>
 
 class KVStore : public KVStoreAPI {
 	// You can add your implementation here
@@ -17,9 +17,9 @@ private:
 	// 保存每一层的类型，Tiering-0，Leveling-1
 	std::map<uint64_t, bool> config_level_type;
 	// 保存每一层的索引，
-	std::map<uint64_t, std::map<uint64_t, SStable<u_int64_t, std::string> *> > ssTableIndex;
+	// std::map<uint64_t, std::map<uint64_t, SStable*> > ssTableIndex;
 
-	MemTable<uint64_t, std::string> * memTable;
+	MemTable * memTable;
 
 	void readConfig(std::string path); 
 	void sstFileCheck(std::string dataPath);
