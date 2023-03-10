@@ -25,7 +25,7 @@ struct Node{
     std::vector<Node<K, V>*> next;
 
     // 默认的构造函数
-    Node();
+    Node(){};
     // 数据节点的构造函数
     Node(K setKey, V setVal, int height){
         this->key = setKey;

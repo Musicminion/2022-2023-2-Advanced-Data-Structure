@@ -1,24 +1,29 @@
 #pragma once
 #include <bitset>
+#include <string>
+#include <iostream>
+#include <fstream>
 #include "MurmurHash3.h"
 
-// K 是键的类型，Size是BF过滤器占用的空间（单位是bit）
+// K 是键的类型，Size是BF过滤器占用的空间（单位是Byte）
 template<typename K, size_t Size>
 class BloomFliter{
 private:
     // 用于存储的位图
-    std::bitset<Size> bloomfliterData;
+    std::bitset<Size * 8> bloomfliterData;
 
 public:
     // 插入元素
-    // void BFinsert(K key){
-    //     this->bloomfliterData.set(0,1);
-    // }
     void BFinsert(K key);
     // 检查元素是否存储
     bool BFfind(K key);
 
-    // 构造函数类型
+    // 读取文件，从文件获取数据（path是路径，offset是文件偏移量，单位是Byte）
+    int BFreadFile(std::string path, uint32_t offset);
+    // 写入文件，把数据写入到文件（path是路径，offset是文件偏移量，单位是Byte）
+    int BFwriteToFile(std::string path, uint32_t offset);
+
+    // 构造函数 析构函数类型
     BloomFliter(){}
     ~BloomFliter(){}
 };
@@ -37,7 +42,7 @@ void BloomFliter<K,Size>::BFinsert(K key){
     this->bloomfliterData.set(0,1);
     // 设置BF过滤器！
     for(int i = 0; i < 4; i++){
-        this->bloomfliterData.set(hash[i] % Size , true);
+        this->bloomfliterData.set(hash[i] % (Size * 8) , true);
     }
 }
 
@@ -52,8 +57,65 @@ bool BloomFliter<K,Size>::BFfind(K key){
     unsigned int hash[4] = {0};
     MurmurHash3_x64_128(&key, sizeof(key), 1, hash);
     for(int i = 0; i < 4; i++){
-        if(this->bloomfliterData.test(hash[i] % Size ) == false)
+        if(this->bloomfliterData.test(hash[i] % (Size * 8) ) == false)
             return false;
     }
     return true;
+}
+
+/**
+ * 把位图的数据写入到文件里面
+ * @param path 文件的路径
+ * @param offset 要读取的偏移量
+ * @return 0代表正常返回，-1代表文件不存在 -2代表范围异常
+ */
+template<typename K, size_t Size>
+int BloomFliter<K,Size>::BFreadFile(std::string path, uint32_t offset){
+    std::ifstream inFile(path, std::ios::in|std::ios::binary);
+
+    if (!inFile)
+        return -1;
+
+    // 文件指针移动到末尾
+    inFile.seekg(0,std::ios::end);
+    uint32_t fileLimit = inFile.tellg();
+
+    // 判断是否超过限度
+    if(offset > fileLimit)
+        return -2;
+
+    // 通过检查，文件指针移动到偏移量
+    inFile.seekg(offset,std::ios::beg);
+
+    inFile.read((char*)&bloomfliterData, sizeof(bloomfliterData));
+    inFile.close();
+}
+
+
+/**
+ * 把位图的数据写入到文件里面
+ * @param path 文件的路径
+ * @param offset 要写入的偏移量
+ * @return 0代表正常返回，-1代表文件不存在 -2代表范围异常
+ */
+template<typename K, size_t Size>
+int BloomFliter<K,Size>::BFwriteToFile(std::string path, uint32_t offset){
+    std::ofstream outFile(path, std::ios::out | std::ios::binary);
+    
+    if (!outFile)
+        return -1;
+    
+    // 文件指针移动到末尾
+    outFile.seekp(0,std::ios::end);
+    uint32_t fileLimit = outFile.tellp();
+
+    // 判断是否超过限度
+    if(offset > fileLimit)
+        return -2;
+    
+    // 通过检查，文件指针移动到偏移量
+    outFile.seekp(offset,std::ios::beg);
+
+    outFile.write((char*)&bloomfliterData, sizeof(bloomfliterData));
+    outFile.close();
 }
