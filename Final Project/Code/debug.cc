@@ -10,34 +10,55 @@ int main(){
     myheader.keyValNum = 100;
     myheader.minKey = 1;
     myheader.maxKey = 10;
+
+    cout << myheader.writeToFile("./mydata",128) << endl;
+    // myheader.writeToFile("./mydata",32);
+
+
+    SSTheader myheaderRead;
+    cout << myheaderRead.readFile("./mydata", 0) << endl;
+    cout << myheaderRead.timeStamp << endl;
+    cout << myheaderRead.keyValNum << endl;
+    cout << myheaderRead.minKey << endl;
+    cout << myheaderRead.maxKey << endl;
+
+}
+
+
+// int main(){
+//     SSTheader myheader;
+//     myheader.timeStamp = 123;
+//     myheader.keyValNum = 100;
+//     myheader.minKey = 1;
+//     myheader.maxKey = 10;
     
-    BloomFliter<int,1024> bf;
-    bf.BFinsert(310);
-    bf.BFinsert(2345);
+//     BloomFliter<int,1024> bf;
+//     bf.BFinsert(310);
+//     bf.BFinsert(2345);
 
-    myheader.writeToFile("./mydata", 0);
-    bf.BFwriteToFile("./mydata", 32);
+//     myheader.writeToFile("./mydata", 0);
+//     bf.BFwriteToFile("./mydata", 32);
 
 
-    SSTheader myread;
-    BloomFliter<int,1024> bfRead;
+//     SSTheader myread;
+//     BloomFliter<int,1024> bfRead;
 
-    myread.readFile("./mydata", 0);
-    bfRead.BFreadFile("./mydata",32);
+//     myread.readFile("./mydata", 0);
+//     bfRead.BFreadFile("./mydata",32);
     
-    cout << myread.timeStamp  << endl;
-    cout << myread.keyValNum  << endl;
-    cout << myread.minKey << endl;
-    cout << myread.maxKey << endl;
+//     cout << myread.timeStamp  << endl;
+//     cout << myread.keyValNum  << endl;
+//     cout << myread.minKey << endl;
+//     cout << myread.maxKey << endl;
    
 
-    cout << bfRead.BFfind(310) << endl;
-    cout << bfRead.BFfind(2347) << endl;
+//     cout << bfRead.BFfind(310) << endl;
+//     cout << bfRead.BFfind(2347) << endl;
     
-    myheader.keyValNum = 100;
+//     myheader.keyValNum = 100;
 
-    return 0;
-}
+//     return 0;
+// }
 
 
 

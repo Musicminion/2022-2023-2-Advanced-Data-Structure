@@ -129,7 +129,7 @@ uint32_t BloomFliter<K,Size>::BFwriteToFile(std::string path, uint32_t offset){
         offset = fileLimit;
     }
 
-    std::ofstream outFile(path, std::ios::out | std::ios::in | std::ios::binary);
+    std::fstream outFile(path, std::ios::out | std::ios::in | std::ios::binary);
     
     if (!outFile)
         return -1;
