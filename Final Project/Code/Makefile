@@ -8,7 +8,7 @@ correctness: memtable.o kvstore.o correctness.o
 
 persistence: memtable.o kvstore.o persistence.o
 
-debug: memtable.o kvstore.o debug.o
+debug: debug.o
 
 clean:
 	-rm -f correctness persistence *.o debug
