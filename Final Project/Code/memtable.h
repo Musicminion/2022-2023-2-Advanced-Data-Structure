@@ -35,11 +35,15 @@ MemTable<K,V>::~MemTable()
 {
     delete skiplist;
 }
+
+
 template<typename K, typename V>
 void MemTable<K,V>::put(K key, const V &s){
     //std::cout << "put :" << key << ", value" << '\n';
     this->skiplist->insertNode(key, s);
 }
+
+
 template<typename K, typename V>
 bool MemTable<K,V>::del(K key){
     //std::cout << "del :" << key << '\n';
@@ -48,6 +52,8 @@ bool MemTable<K,V>::del(K key){
     this->skiplist->deleteNode(key);
     return true;
 }
+
+
 template<typename K, typename V>
 V MemTable<K,V>::get(K key){
     //std::cout << "get :" << key << '\n';
