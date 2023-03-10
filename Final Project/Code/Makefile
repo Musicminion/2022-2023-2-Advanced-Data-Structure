@@ -2,11 +2,22 @@
 LINK.o = $(LINK.cc)
 CXXFLAGS = -std=c++14 -Wall
 
+
+sstUtil = sstheader.o sstindex.o sstvalue.o
+
 all: correctness persistence
 
-correctness: memtable.o kvstore.o correctness.o 
+correctness: kvstore.o correctness.o memtable.o $(sstUtil)
 
-persistence: memtable.o kvstore.o persistence.o
+persistence: kvstore.o persistence.o memtable.o $(sstUtil)
+
+sstheader.o: sstheader.cc
+
+sstindex.o: sstindex.cc 
+
+sstvalue.o: sstvalue.cc
+
+
 
 debug: debug.o
 

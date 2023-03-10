@@ -1,28 +1,55 @@
-#include "sstheader.h"
-#include "bloomfliter.h"
 #include <iostream>
+#include <string>
+#include "sstvalue.h"
 
 using namespace std;
 
 int main(){
-    SSTheader myheader;
-    myheader.timeStamp = 123;
-    myheader.keyValNum = 100;
-    myheader.minKey = 1;
-    myheader.maxKey = 10;
+    SSTvalue test;
+    test.insert("123****");
+    test.insert("456");
+    test.insert("7777");
 
-    cout << myheader.writeToFile("./mydata",128) << endl;
-    // myheader.writeToFile("./mydata",32);
+    cout << test.getValNum() << endl;
+    
+    cout << test.getVal(0) << endl;
 
 
-    SSTheader myheaderRead;
-    cout << myheaderRead.readFile("./mydata", 0) << endl;
-    cout << myheaderRead.timeStamp << endl;
-    cout << myheaderRead.keyValNum << endl;
-    cout << myheaderRead.minKey << endl;
-    cout << myheaderRead.maxKey << endl;
+    test.writeToFile("./mydata",0);
 
+    cout << test.getValFromFile("./mydata", 3, 6) << endl;
+    return 0;
 }
+
+
+
+
+// #include "sstheader.h"
+// #include "bloomfliter.h"
+// #include <iostream>
+
+// using namespace std;
+
+// int main(){
+//     SSTheader myheader;
+//     myheader.timeStamp = 123;
+//     myheader.keyValNum = 100;
+//     myheader.minKey = 1;
+//     myheader.maxKey = 10;
+
+//     cout << myheader.writeToFile("./mydata",128) << endl;
+//     // myheader.writeToFile("./mydata",32);
+
+
+//     SSTheader myheaderRead;
+//     cout << myheaderRead.readFile("./mydata", 0) << endl;
+//     cout << myheaderRead.timeStamp << endl;
+//     cout << myheaderRead.keyValNum << endl;
+//     cout << myheaderRead.minKey << endl;
+//     cout << myheaderRead.maxKey << endl;
+
+//     return 0;
+// }
 
 
 // int main(){

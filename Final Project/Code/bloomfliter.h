@@ -14,14 +14,14 @@ private:
 
 public:
     // 插入元素
-    void BFinsert(K key);
+    void insert(K key);
     // 检查元素是否存储
-    bool BFfind(K key);
+    bool find(K key);
 
     // 读取文件，从文件获取数据（path是路径，offset是文件偏移量，单位是Byte）
-    int BFreadFile(std::string path, uint32_t offset);
+    int readFile(std::string path, uint32_t offset);
     // 写入文件，把数据写入到文件（path是路径，offset是文件偏移量，单位是Byte）
-    uint32_t BFwriteToFile(std::string path, uint32_t offset);
+    uint32_t writeToFile(std::string path, uint32_t offset);
     // 构造函数 析构函数类型
     BloomFliter(){}
     ~BloomFliter(){}
@@ -33,7 +33,7 @@ public:
  * @param Key 要插入的目标Key
  */
 template<typename K, size_t Size>
-void BloomFliter<K,Size>::BFinsert(K key){
+void BloomFliter<K,Size>::insert(K key){
     // 如果已经创建，那就继续写入
     // 计算四个hash值
     unsigned int hash[4] = {0};
@@ -52,7 +52,7 @@ void BloomFliter<K,Size>::BFinsert(K key){
  * @return 是否存在在BF过滤器，存在返回 1 ，不存在返回 0
  */
 template<typename K, size_t Size>
-bool BloomFliter<K,Size>::BFfind(K key){
+bool BloomFliter<K,Size>::find(K key){
     unsigned int hash[4] = {0};
     MurmurHash3_x64_128(&key, sizeof(key), 1, hash);
     for(int i = 0; i < 4; i++){
@@ -69,7 +69,7 @@ bool BloomFliter<K,Size>::BFfind(K key){
  * @return 0代表正常返回，-1代表文件不存在 -2代表范围异常
  */
 template<typename K, size_t Size>
-int BloomFliter<K,Size>::BFreadFile(std::string path, uint32_t offset){
+int BloomFliter<K,Size>::readFile(std::string path, uint32_t offset){
     std::ifstream inFile(path, std::ios::in|std::ios::binary);
 
     if (!inFile)
@@ -103,7 +103,7 @@ int BloomFliter<K,Size>::BFreadFile(std::string path, uint32_t offset){
  * @return 返回文件写入的偏移量（Byte）
  */
 template<typename K, size_t Size>
-uint32_t BloomFliter<K,Size>::BFwriteToFile(std::string path, uint32_t offset){
+uint32_t BloomFliter<K,Size>::writeToFile(std::string path, uint32_t offset){
     // 判断文件是否存在，用尝试读取的方式打开，如果打开成功就认为文件存在
     bool ifFileExist = false;
     uint32_t fileLimit = 0;
