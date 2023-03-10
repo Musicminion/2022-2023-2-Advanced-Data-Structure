@@ -97,13 +97,12 @@ template<typename K, typename V>
 Skiplist<K,V>::~Skiplist(){
     // 清空元素
     this->clear();
-    // 删除head节点、尾巴节点
+    // 删除尾巴节点、head节点
     delete head->next[0];
     delete head;
 }
 
-
-// 插入节点
+// 插入节点[或者编辑一个已有的节点]
 template<typename K, typename V>
 Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
     std::map<int, std::vector<Node<K,V>*> > findPath;
