@@ -1,23 +1,41 @@
 #include "sstheader.h"
+#include "bloomfliter.h"
 #include <iostream>
 
 using namespace std;
 
 int main(){
     SSTheader myheader;
-    myheader.timeStamp = 99;
-    myheader.keyValNum = 1;
+    myheader.timeStamp = 123;
+    myheader.keyValNum = 100;
     myheader.minKey = 1;
-    myheader.maxKey = 1;
-    cout << myheader.writeToFile("./mydata", 32) << endl;
+    myheader.maxKey = 10;
+    
+    BloomFliter<int,1024> bf;
+    bf.BFinsert(310);
+    bf.BFinsert(2345);
 
-    // SSTheader myheaderRead;
-    // cout << myheader.readFile("./mydata", 0);
+    myheader.writeToFile("./mydata", 0);
+    bf.BFwriteToFile("./mydata", 32);
 
-    // cout << myheader.timeStamp << endl;
-    // cout << myheader.keyValNum << endl;
-    // cout << myheader.minKey << endl;
-    // cout << myheader.maxKey << endl;
+
+    SSTheader myread;
+    BloomFliter<int,1024> bfRead;
+
+    myread.readFile("./mydata", 0);
+    bfRead.BFreadFile("./mydata",32);
+    
+    cout << myread.timeStamp  << endl;
+    cout << myread.keyValNum  << endl;
+    cout << myread.minKey << endl;
+    cout << myread.maxKey << endl;
+   
+
+    cout << bfRead.BFfind(310) << endl;
+    cout << bfRead.BFfind(2347) << endl;
+    
+    myheader.keyValNum = 100;
+
     return 0;
 }
 
@@ -27,7 +45,15 @@ int main(){
 
 
 
-
+    
+    // cout << "offset is : " << myheader.writeToFile("./mydata", 128) << endl;
+    
+    // SSTheader myheaderRead;
+    // cout << myheaderRead.readFile("./mydata", 0) << endl;
+    // cout << myheaderRead.timeStamp << endl;
+    // cout << myheaderRead.keyValNum << endl;
+    // cout << myheaderRead.minKey << endl;
+    // cout << myheaderRead.maxKey << endl;
 
 
 
