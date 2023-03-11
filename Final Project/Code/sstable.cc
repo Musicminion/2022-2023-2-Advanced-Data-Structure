@@ -284,6 +284,29 @@ std::string SStable::getSStableValue(size_t index){
 }
 
 
+
+/**
+ * 检查一个key是否存在在sstable里面
+*/
+bool SStable::checkIfExist(uint64_t targetKey){
+    if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey)
+        return false;
+
+    if(this->cachePolicy[1] == true){
+        return getBloomFliterPtr()->find(targetKey);
+    }
+
+    return true;
+}
+
+/**
+ * 通过二分法查找某一个key是否存在
+*/
+uint32_t SStable::getKeyOffsetByKey(uint64_t key){
+    
+}
+
+
 /**
  * 开发使用的函数，输出部分调试信息
 */

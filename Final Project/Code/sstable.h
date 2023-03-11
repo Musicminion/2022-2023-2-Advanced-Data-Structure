@@ -61,31 +61,13 @@ public:
 
     uint64_t getSStableKey(size_t index);
     uint32_t getSStableKeyOffset(size_t index);
+    uint32_t getKeyOffsetByKey(uint64_t key);
     std::string getSStableValue(size_t index);
+
+    bool checkIfExist(uint64_t targetKey);
 
     SStable();
     ~SStable();
 };
 
 
-
-
-
-
-
-
-
-
-
-
-    // // 文件读写，本质是刷新缓存策略
-    // // 缓存策略 header必读！BF过滤器可选！index可选读，value永远不读。
-    // int readFile();
-    // int readFile(std::string setPath);
-    // int readFile(std::string setPath, bool setCachePolicy[4]);
-
-    // int writeToFile();
-    // int writeToFile(std::string setPath);
-    // int writeToFile(std::string setPath, bool afterWriteCachePolicy[4]);
-    
-    // int deleteFile();
