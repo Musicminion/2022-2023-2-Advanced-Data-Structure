@@ -3,8 +3,15 @@
 
 SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->path = setPath;
-    this->refreshCachePolicy(setCachePolicy);
+    // 初始化的事情必须把这个指针指向NULL，因为后面判断会用到！
+    this->bloomFliter = NULL;
+    this->index = NULL;
+    this->value = NULL;
+    this->header = NULL;
 
+    // 刷新缓存策略本质上会读文件
+    this->refreshCachePolicy(setCachePolicy);
+    
     // 再亲自去读取一遍获取大小
     std::ifstream inFile(setPath, std::ios::in|std::ios::binary);
     
@@ -43,7 +50,7 @@ SStable::SStable(
 
     // 初始化value偏移量起点
     uint32_t curValueOffset = sstable_fileOffset_key + list.size() * (sstable_keySize + sstable_keyOffsetSize);
-    
+
     for(auto iter = list.begin(); iter != list.end(); iter++){
         // 更新min、max
         curMinKey = std::min(curMinKey, iter->first);
@@ -109,7 +116,6 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
     }
     else
         getHeaderPtr();
-    
     // ************ BF ************
     if(setCachePolicy[1] == false){
         if(this->bloomFliter != NULL){
@@ -120,6 +126,7 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
     }
     else
         getBloomFliterPtr();
+    
     // ************ index ************
     if(setCachePolicy[2] == false){
         if(this->index != NULL){
@@ -129,7 +136,7 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
     }
     else
         getIndexPtr();
-
+    
     // ************ value ************
     if(setCachePolicy[3] == false){
         if(this->value != NULL){
@@ -148,9 +155,9 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
 */
 SSTheader * SStable::getHeaderPtr(){
     this->cachePolicy[0] = true;
-    if(this->header != NULL)
+    if(this->header != NULL){
         return this->header;
-    
+    }
     this->header = new SSTheader(this->path, sstable_fileOffset_header);
     return this->header;  
 }
@@ -176,9 +183,9 @@ SSTindex * SStable::getIndexPtr(){
     this->cachePolicy[2] = true;
     if(this->index != NULL)
         return this->index;
-    uint64_t kvNum = this->getHeaderPtr()->keyValNum;
+    uint64_t kvNum = (this->getHeaderPtr())->keyValNum;
     this->index = new SSTindex(this->path, sstable_fileOffset_key, kvNum);
-    
+
     return this->index;
 }
 
@@ -255,21 +262,23 @@ uint32_t SStable::getSStableKeyOffset(size_t index){
  * 获取value的值 index is 0-base
 */
 std::string SStable::getSStableValue(size_t index){
+    
     uint64_t KVnum = this->getHeaderPtr()->keyValNum;
+
     if(index >= KVnum)
         return sstable_outOfRange;
     
     // 恰好是最后一个元素
     uint32_t offset = this->getIndexPtr()->getOffset(index);
     if(index + 1 == KVnum){
-        
         return this->getValuePtr()->getValFromFile(this->path, 
             offset, this->fileSize - offset);
     }
     // 如果不是最后一个元素，那就可以通过两个元素的偏移量之差来计算读取的长度
-    
+
     uint32_t offsetNext = this->getIndexPtr()->getOffset(index + 1);
    
+    
     return this->getValuePtr()->getValFromFile(this->path, 
         offset, offsetNext - offset);
 }

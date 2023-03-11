@@ -4,28 +4,37 @@
 #include <sstream>
 #include <iostream>
 
-std::string GetCurrentTimeStamp(int time_stamp_type = 0)
-{
-    return "";
-}
+#include "sstable.h"
+
+using namespace std;
 
 int main()
 {
+    std::list <std::pair<uint64_t, std::string> > list;
 
-    // std::cout << GetCurrentTimeStamp(0) << std::endl;
-    // std::cout << GetCurrentTimeStamp(1) << std::endl;
-    // std::cout << GetCurrentTimeStamp(2) << std::endl;
-    // std::cout << GetCurrentTimeStamp(3) << std::endl;
-
-    for(int i = 0; i < 100; i++){
-        
+    for (size_t i = 0; i < 10000; i++)
+    {
+        string str = "aaaaa" + to_string(i);
+        list.push_back({i*2,str});  
     }
 
-   
-    uint64_t value; 
-    std::istringstream iss("1678524479601529000"); 
-    iss >> value;
-    std::cout << value << "\n" << UINT64_MAX;
+    bool cachePolicy[4] = {true, true, true, false};
+    SStable mytable(32,list, "./data/level-0/test.sst", cachePolicy);
+
+    SStable mytable2("./data/level-0/test.sst", cachePolicy);
+
+    for(int i = 0; i < 1000; i++){
+        cout << mytable2.getSStableKey(i) << endl;
+        cout << mytable2.getSStableKeyOffset(i) << endl;
+        cout << mytable2.getSStableValue(i) << endl;
+    }
+
+    cout << mytable2.getSStableKeyValNum()<< endl;
+    cout << mytable2.getSStableTimeStamp()<< endl;
+    cout << mytable2.getSStableMaxKey() << endl;
+    cout << mytable2.getSStableMinKey() << endl;
+    
+
     return 0;
 }
 

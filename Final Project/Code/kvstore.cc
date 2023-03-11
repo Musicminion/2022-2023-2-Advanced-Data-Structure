@@ -215,6 +215,7 @@ int KVStore::mergeCheck(){
  * 发起归并，归并X层和X+1层！
 */
 void KVStore::merge(uint64_t X){
+	
 	// 检查X+1层是否存在，不存在就创建一层
 	if(config_level_limit.count(X+1) == 0){
 		config_level_limit[X + 1] = config_level_limit[X] * 2;
@@ -299,20 +300,20 @@ void KVStore::merge(uint64_t X){
 		}
 	}
 
-	
 	for(auto iter = ssTableSelectProcessed.begin(); iter != ssTableSelectProcessed.end(); iter++){
 		// iter->first 时间戳 iter->second 指针
+		
 		SStable * curTablePt = iter->second;
 		uint64_t KVNum = curTablePt->getSStableKeyValNum();
+		
 		for (uint64_t i = 0; i < KVNum; i++)
 		{
 			uint64_t curKey = curTablePt->getSStableKey(i);
 			std::string curVal = curTablePt->getSStableValue(i);
 			sortMap[curKey][iter->first] = curVal;
-		}		
+		}
 	}
 
-	
 	// 二次处理
 	std::map<uint64_t, std::string> sortMapProcessed;
 

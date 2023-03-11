@@ -44,6 +44,7 @@ uint32_t SSTvalue::writeToFile(std::string path, uint32_t offset){
     for (size_t i = 0; i < valVec.size(); i++)
     {
         outFile.write(valVec[i].c_str(), valVec[i].size());
+        
     }
     outFile.close();
 
@@ -87,29 +88,30 @@ std::string SSTvalue::getValFromFile(std::string path, uint32_t offset, size_t l
     std::ifstream inFile(path, std::ios::in|std::ios::binary);
     if (!inFile)
         return sstvalue_readFile_file;
-
     // 文件指针移动到末尾
     inFile.seekg(0,std::ios::end);
     uint32_t fileLimit = inFile.tellg();
-
     // 判断是否超过限度 读取起点越界或者终点越界，都会返回-1
     if(offset > fileLimit || offset + length > fileLimit){
         inFile.close();
         return sstvalue_readFile_outOfRange;
     }
-    inFile.clear();
+
+    // inFile.clear();
     // 通过检查，文件指针移动到偏移量
     inFile.seekg(offset,std::ios::beg);
-
 
     char* readStr = new char[length];
     inFile.read(readStr, length);
 
     // 拷贝到str然后删除释放空间
-    std::string readResult(readStr);
+    std::string readResult = "";
+    for(size_t i = 0; i < length; i++){
+        readResult += readStr[i];
+    }
 
     delete [] readStr;
-     
+
     inFile.close();
     return readResult;
 }

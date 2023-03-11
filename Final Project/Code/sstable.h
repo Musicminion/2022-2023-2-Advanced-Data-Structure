@@ -20,10 +20,10 @@ private:
     // SSTable由四部分组成，header、BF、索引、数据区域
     // 【警告】这些指针请不要直接调用，更不要修改，需要通过getXXXPtr访问
     // 因为getXXXPtr做了慎重的考虑封装而来，会保证缓存策略的一致性，防止内存泄漏
-    SSTheader * header;
-    BloomFliter<uint64_t, sstable_bfSize > * bloomFliter;
-    SSTindex * index;
-    SSTvalue * value;
+    SSTheader * header = NULL;
+    BloomFliter<uint64_t, sstable_bfSize > * bloomFliter = NULL;
+    SSTindex * index  = NULL;
+    SSTvalue * value  = NULL;
 
     // 内部提供获取相关header指针、bf指针、index指针、value指针
     // 通过函数获取指针，最大的好处就是保证不需要手动创建，哪怕当前没有header
@@ -32,9 +32,6 @@ private:
     BloomFliter<uint64_t, sstable_bfSize > * getBloomFliterPtr();
     SSTindex * getIndexPtr();
     SSTvalue * getValuePtr();
-
-    
-
 
 public:
 
