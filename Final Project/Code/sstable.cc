@@ -1,5 +1,5 @@
 #include "sstable.h"
-
+#include "utils.h"
 
 SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->path = setPath;
@@ -172,7 +172,16 @@ SSTvalue * SStable::getValuePtr(){
     return this->value;
 }
 
-
+/**
+ * 清空所有的数据、并且删除文件！危险操作！
+*/
+ void SStable::clear(){
+    // 删除文件
+    utils::rmfile(this->path.c_str());
+    // 删除所有指针
+    bool clearPolicy[4] = {false, false ,false, false};
+    refreshCachePolicy(clearPolicy);
+ }
 
 
 void SStable::devTest(){

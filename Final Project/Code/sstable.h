@@ -51,6 +51,8 @@ public:
     
     void devTest();
 
+    void clear();
+
     SStable();
     ~SStable();
 };

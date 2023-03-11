@@ -1,10 +1,15 @@
 #include "kvstore.h"
 #include "config.h"
 #include <string>
+#include <sstream>
+#include <chrono>
 
 const bool Tiering = 0;
 const bool Leveling = 1;
 const std::string confFilePath = "./default.conf";
+
+bool cachePolicy[4] = {true, true, true, false};
+
 
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
 {
@@ -29,8 +34,28 @@ KVStore::~KVStore()
  * No return values for simplicity.
  */
 void KVStore::put(uint64_t key, const std::string &s)
-{
-	this->memTable->put(key, s);
+{	
+	
+	// 发起插入检查！
+	if(this->memTable->putCheck(key,s)){
+		this->memTable->put(key, s);
+		return;
+	}
+	
+	// 从内存表里面拷贝数据
+	std::list<std::pair<uint64_t, std::string> > dataAll;
+	this->memTable->copyAll(dataAll);
+	
+	// 时间戳获取
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::chrono::microseconds msTime;
+    msTime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+	// 文件创建
+	SStable* newSStable = new SStable(1, dataAll, "./data/level-0/" + std::to_string(msTime.count()) +".sst", cachePolicy);
+	// 删除
+	delete newSStable;
+	// 内存表格重置
+	this->memTable->reset();
 }
 
 /**
@@ -115,6 +140,22 @@ void KVStore::sstFileCheck(std::string dataPath){
 		// 判断目录是否存在，不存在创建
 		if(!utils::dirExists(levelPathStr)){
 			utils::mkdir(levelPathStr.c_str());
+		}
+
+		std::vector<std::string> scanResult;
+		utils::scanDir(levelPathStr, scanResult);
+
+		
+		for(int i = 0; i <scanResult.size(); i++){
+			std::string fileName = scanResult[i];
+			std::string fileID = fileName.substr(0, fileName.find('.'));
+			
+			uint64_t fileIDNum = 0; 
+			std::istringstream iss(fileID); 
+			iss >> fileIDNum;
+
+			std::string fullPath = levelPathStr + "/" + fileName;
+			ssTableIndex[iter->first][fileIDNum] = new SStable(fullPath, cachePolicy);
 		}
 	}
 

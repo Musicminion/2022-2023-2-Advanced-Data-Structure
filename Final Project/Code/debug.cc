@@ -1,27 +1,79 @@
-#include "sstable.h"
+#include <ctime>
+#include <string>
+#include <chrono>
+#include <sstream>
 #include <iostream>
-using namespace std;
 
-int main(){
-    bool policy[4] = {true,true,true,false};
-    std::list <std::pair<uint64_t, std::string> > list;
-
-    list.push_back({0, "adadad"});
-    list.push_back({3345, "bcccbb"});
-    list.push_back({23, "bbbcass"});
-    list.push_back({43, "bbb"});
-    list.push_back({667, "bbbf"});
-    list.push_back({777, "bbsb"});
-    
-    SStable mysstable(1, list, "./mydata" , policy);
-
-
-    SStable mytestTable("./mydata", policy);
-    mytestTable.devTest();
+std::string GetCurrentTimeStamp(int time_stamp_type = 0)
+{
     
 
-    return 0;    
+    return "";
 }
+
+int main()
+{
+
+    // std::cout << GetCurrentTimeStamp(0) << std::endl;
+    // std::cout << GetCurrentTimeStamp(1) << std::endl;
+    // std::cout << GetCurrentTimeStamp(2) << std::endl;
+    // std::cout << GetCurrentTimeStamp(3) << std::endl;
+
+    for(int i = 0; i < 100; i++){
+        
+    }
+
+   
+    uint64_t value; 
+    std::istringstream iss("1678524479601529000"); 
+    iss >> value;
+    std::cout << value << "\n" << UINT64_MAX;
+    return 0;
+}
+
+
+
+// #include "sstable.h"
+// #include <iostream>
+// #include <sstream>
+// #include <chrono>
+// #include <unistd.h>
+
+// using namespace std;
+// using namespace chrono;
+
+// int main(){
+
+//     for(int i = 0; i < 100; i++){
+//         auto t1 = std::chrono::high_resolution_clock::now();
+//         cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t1.time_since_epoch()).count() << endl;
+//     }
+    
+
+//     uint64_t value; 
+//     std::istringstream iss("24272206472791"); 
+//     iss >> value;
+//     cout << value;
+
+//     // bool policy[4] = {true,true,true,false};
+//     // std::list <std::pair<uint64_t, std::string> > list;
+
+//     // list.push_back({0, "adadad"});
+//     // list.push_back({3345, "bcccbb"});
+//     // list.push_back({23, "bbbcass"});
+//     // list.push_back({43, "bbb"});
+//     // list.push_back({667, "bbbf"});
+//     // list.push_back({777, "bbsb"});
+    
+//     // SStable mysstable(1, list, "./mydata" , policy);
+
+
+//     // SStable mytestTable("./mydata", policy);
+//     // mytestTable.devTest();
+    
+
+//     return 0;    
+// }
 
 
 // #include <iostream>

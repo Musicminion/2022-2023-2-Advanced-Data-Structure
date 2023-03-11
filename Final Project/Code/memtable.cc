@@ -109,9 +109,9 @@ bool MemTable::putCheck(uint64_t key, const std::string &s){
     size_t keySpace = sizeof(uint64_t) + sizeof(uint32_t);
     // valSpace
     size_t valSpace = s.size();
-
     if(sstSpaceSize + keySpace + valSpace <= sstable_maxSize)
         return true;
+    
     return false;
 }
 
