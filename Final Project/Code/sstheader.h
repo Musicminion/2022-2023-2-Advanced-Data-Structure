@@ -20,4 +20,6 @@ public:
 
     SSTheader(){}
     ~SSTheader(){}
+    // 通过构造函数传递路径，偏移量，然后初始化一个Header
+    SSTheader(std::string path, uint32_t offset);
 };

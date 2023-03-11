@@ -1,25 +1,42 @@
-#include <iostream>
-#include <string>
-#include "sstvalue.h"
+#include "config.h"
 
+#include <iostream>
 using namespace std;
 
 int main(){
-    SSTvalue test;
-    test.insert("123****");
-    test.insert("456");
-    test.insert("7777");
-
-    cout << test.getValNum() << endl;
-    
-    cout << test.getVal(0) << endl;
-
-
-    test.writeToFile("./mydata",0);
-
-    cout << test.getValFromFile("./mydata", 3, 6) << endl;
-    return 0;
+    bool *cacheStatus;
+    int32_t status = 0xFFFF0000; // 4 2 1 0
+    *cacheStatus = status;
+    for(int i = 0; i < 4; i++){
+        if(cacheStatus[i])
+            cout << "true!\n";
+    }
+    return 0;    
 }
+
+
+// #include <iostream>
+// #include <string>
+// #include "sstvalue.h"
+
+// using namespace std;
+
+// int main(){
+//     SSTvalue test;
+//     test.insert("123****");
+//     test.insert("456");
+//     test.insert("7777");
+
+//     cout << test.getValNum() << endl;
+    
+//     cout << test.getVal(0) << endl;
+
+
+//     test.writeToFile("./mydata",0);
+
+//     cout << test.getValFromFile("./mydata", 3, 6) << endl;
+//     return 0;
+// }
 
 
 

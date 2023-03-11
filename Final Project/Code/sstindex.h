@@ -28,5 +28,7 @@ public:
 
     SSTindex(){ keyNum = 0;}
     ~SSTindex(){}
+
+    SSTindex(std::string path, uint32_t offset,size_t readKeyNum);
 };
 

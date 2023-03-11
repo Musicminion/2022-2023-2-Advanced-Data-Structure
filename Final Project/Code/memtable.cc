@@ -3,6 +3,8 @@
 MemTable::MemTable()
 {
     skiplist = new Skiplist<uint64_t, std::string>();
+    // 初始化占用的sst大小为 头部的header和bf过滤器的size
+    sstSpaceSize = sstable_headerSize + sstable_bfSize;
 }
 
 
@@ -13,8 +15,27 @@ MemTable::~MemTable()
 
 
 void MemTable::put(uint64_t key, const std::string &s){
-    //std::cout << "put :" << key << ", value" << '\n';
-    this->skiplist->insertNode(key, s);
+    // 确保安全，再发起一次插入检查
+    if(this->putCheck(key, s) == false)
+        return;
+    // 插入节点之前，先检查节点是否存在
+    std::string tryFind = this->get(key);
+
+    // 插入全新的key-value对，就需要把sstSpaceSize更新
+    if(tryFind == memtable_not_exist){
+        this->skiplist->insertNode(key, s);
+        sstSpaceSize += (s.size() + sizeof(uint32_t) + sizeof(uint64_t));
+    }
+    // 需要比较新插入的和可能存在的已有的 value的大小
+    else{
+        // 插入已有的，相当于编辑value，那就要考虑编辑前后的大小
+        if(s.size() >= tryFind.size()){
+            sstSpaceSize += s.size() - tryFind.size();
+        }
+        else{
+            sstSpaceSize -= tryFind.size() - s.size();
+        }
+    }
 }
 
 
@@ -35,12 +56,15 @@ std::string MemTable::get(uint64_t key){
         std::string result = tryFindNode->val;
         return result;
     }
-    return "";
+    return memtable_not_exist;
 }
 
 
 void MemTable::reset(){
+    // 重置之后，首先清空跳表数据
     this->skiplist->clear();
+    // 然后把当前维护的转换到sst的大小计算出来
+    sstSpaceSize = sstable_headerSize + sstable_bfSize;
 }
 
 
@@ -72,6 +96,21 @@ void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, 
             iter = iter->next[0];
         }
     }
+}
 
+/**
+ * 执行插入检查，返回当前数据是否可以插入
+ * @param key 要插入的key
+ * @param s 要插入的字符
+ * @return 返回插入之后，是否会让当前内存表转成sst表超过范围
+*/
+bool MemTable::putCheck(uint64_t key, const std::string &s){
+    // 新增加的keySpace
+    size_t keySpace = sizeof(uint64_t) + sizeof(uint32_t);
+    // valSpace
+    size_t valSpace = s.size();
 
+    if(sstSpaceSize + keySpace + valSpace <= sstable_maxSize)
+        return true;
+    return false;
 }

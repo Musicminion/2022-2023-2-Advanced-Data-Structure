@@ -1,4 +1,6 @@
 #include "kvstore.h"
+#include "config.h"
+#include <string>
 
 const bool Tiering = 0;
 const bool Leveling = 1;
@@ -36,8 +38,11 @@ void KVStore::put(uint64_t key, const std::string &s)
  * An empty string indicates not found.
  */
 std::string KVStore::get(uint64_t key)
-{
-	return this->memTable->get(key);
+{	
+	std::string result = this->memTable->get(key);
+	if(result != memtable_not_exist)
+		return result;
+	return "";
 }
 /**
  * Delete the given key-value pair if it exists.

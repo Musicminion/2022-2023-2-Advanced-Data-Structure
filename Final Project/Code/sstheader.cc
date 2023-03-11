@@ -1,6 +1,17 @@
 #include "sstheader.h"
 
 /**
+ * 提供的一种构造函数，通过文件读写，获取header信息
+ * @param path 文件路径 
+ * @param offset 要读取的偏移量，默认为0
+*/
+SSTheader::SSTheader(std:: string path, uint32_t offset){
+    readFile(path, offset);
+}
+
+
+
+/**
  * 从文件读取Header数据
  * @param path 文件的路径
  * @param offset 要读取的偏移量，默认为0

@@ -22,10 +22,21 @@ public:
     int readFile(std::string path, uint32_t offset);
     // 写入文件，把数据写入到文件（path是路径，offset是文件偏移量，单位是Byte）
     uint32_t writeToFile(std::string path, uint32_t offset);
+    
     // 构造函数 析构函数类型
     BloomFliter(){}
     ~BloomFliter(){}
+
+    BloomFliter(std::string path, uint32_t offset);
 };
+
+
+
+template<typename K, size_t Size>
+BloomFliter<K,Size>::BloomFliter(std::string path, uint32_t offset){
+    readFile(path, offset);
+}
+
 
 
 /**

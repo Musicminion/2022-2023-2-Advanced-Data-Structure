@@ -1,6 +1,15 @@
 #include "sstindex.h"
 
 /**
+ * 创建SSTindex对象，并从文件里面读取
+*/
+SSTindex::SSTindex(std::string path, uint32_t offset,size_t readKeyNum){
+    this->keyNum = 0;
+    readFile(path,offset,readKeyNum);
+}
+
+
+/**
  * 从文件读取SST的索引部分，根据文件的目录、
  * @param path 要读取文件的路径
  * @param offset 要读取的文件的起点偏移量
@@ -38,6 +47,7 @@ int SSTindex::readFile(std::string path, uint32_t offset,size_t readKeyNum){
 
         keyVec.push_back(keyRead);
         offsetVec.push_back(offsetRead);
+        keyNum++;
     }
 
     inFile.close();

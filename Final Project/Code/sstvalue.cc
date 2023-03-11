@@ -70,7 +70,7 @@ void SSTvalue::insert(std::string newVal){
  */
 std::string SSTvalue::getVal(size_t index){
     if(index > valNum)
-        return "~!Exceed Limit!~";
+        return sstvalue_outOfRange;
     return valVec[index];
 }
 
@@ -84,7 +84,7 @@ std::string SSTvalue::getVal(size_t index){
 std::string SSTvalue::getValFromFile(std::string path, uint32_t offset, size_t length){
     std::ifstream inFile(path, std::ios::in|std::ios::binary);
     if (!inFile)
-        return "~!NO File!~";
+        return sstvalue_readFile_file;
 
     // 文件指针移动到末尾
     inFile.seekg(0,std::ios::end);
@@ -93,7 +93,7 @@ std::string SSTvalue::getValFromFile(std::string path, uint32_t offset, size_t l
     // 判断是否超过限度 读取起点越界或者终点越界，都会返回-1
     if(offset > fileLimit || offset + length > fileLimit){
         inFile.close();
-        return "~!Exceed Limit!~";
+        return sstvalue_readFile_outOfRange;
     }
 
     inFile.clear();

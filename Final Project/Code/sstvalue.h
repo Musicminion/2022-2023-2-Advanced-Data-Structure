@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include "config.h"
 
 // SST的数据区域 
 // 这里只提供读取某一个特定Value String的 API 因为没有需求要把sst文件的所有val读取

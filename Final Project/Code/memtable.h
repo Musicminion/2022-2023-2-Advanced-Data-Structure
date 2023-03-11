@@ -1,15 +1,23 @@
 #pragma once
 #include "skiplist.h"
+#include "config.h"
 
 class MemTable
 {
 private:
+    // 维护跳表
     Skiplist<uint64_t, std::string>* skiplist;
+    // 维护转换到sstable的大小（单位Byte）
+    size_t sstSpaceSize;
+
 
 public:
     MemTable();
     ~MemTable();
 
+    bool putCheck(uint64_t key, const std::string &s);
+
+    
     void put(uint64_t key, const std::string &s);
 
     bool del(uint64_t key);
