@@ -3,7 +3,7 @@ LINK.o = $(LINK.cc)
 CXXFLAGS = -std=c++14 -Wall
 
 
-sstUtil = sstheader.o sstindex.o sstvalue.o
+sstUtil = sstheader.o sstindex.o sstvalue.o sstable.o
 
 all: correctness persistence
 
@@ -17,9 +17,9 @@ sstindex.o: sstindex.cc
 
 sstvalue.o: sstvalue.cc
 
+sstable.o: sstable.cc
 
-
-debug: debug.o
+debug: debug.o $(sstUtil)
 
 clean:
 	-rm -f correctness persistence *.o debug

@@ -114,3 +114,7 @@ bool MemTable::putCheck(uint64_t key, const std::string &s){
         return true;
     return false;
 }
+
+void MemTable::copyAll(std::list<std::pair<uint64_t, std::string> > &list){
+    this->skiplist->copyAll(list);
+}

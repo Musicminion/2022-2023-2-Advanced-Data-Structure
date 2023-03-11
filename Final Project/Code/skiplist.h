@@ -59,6 +59,7 @@ public:
     Node<K,V>* insertNode(K elemKey, V elemVal);
     Node<K,V>* findNode(K elemKey);
     void deleteNode(K elemKey);
+    void copyAll(std::list<std::pair<K, V> > &list);
 
     size_t getSize();
     void clear();
@@ -349,7 +350,7 @@ void Skiplist<K,V>::clear(){
         }
     }
 
-    // 把调表的大小设置为 0 
+    // 把跳表的大小设置为 0 
     this->size = 0;
 
     // 经过while循环，此时的 iter 指向的一定是终止节点！
@@ -397,6 +398,18 @@ void Skiplist<K,V>::tranverse(){
         }
         std::cout << "]" << std::endl;
 
+        // 迭代器后移动
+        iter = iter->next[0];
+    }
+}
+
+template<typename K, typename V>
+void Skiplist<K,V>::copyAll(std::list<std::pair<K, V> > &list){
+    Node<K,V>* iter = head;
+    while(iter->type != nodeType_End){
+        if(iter->type == nodeType_Data){
+            list.push_back({iter->key, iter->val});
+        }
         // 迭代器后移动
         iter = iter->next[0];
     }

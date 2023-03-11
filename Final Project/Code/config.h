@@ -24,9 +24,6 @@
 
 
 
-
-
-
 // sstable文件的最大限制(2MB = 2 * 1024 * 1024)
 #define sstable_maxSize 2 * 1024 * 1024
 

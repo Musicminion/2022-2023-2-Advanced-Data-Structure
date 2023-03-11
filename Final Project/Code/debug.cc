@@ -1,16 +1,25 @@
-#include "config.h"
-
+#include "sstable.h"
 #include <iostream>
 using namespace std;
 
 int main(){
-    bool *cacheStatus;
-    int32_t status = 0xFFFF0000; // 4 2 1 0
-    *cacheStatus = status;
-    for(int i = 0; i < 4; i++){
-        if(cacheStatus[i])
-            cout << "true!\n";
-    }
+    bool policy[4] = {true,true,true,false};
+    std::list <std::pair<uint64_t, std::string> > list;
+
+    list.push_back({0, "adadad"});
+    list.push_back({3345, "bcccbb"});
+    list.push_back({23, "bbbcass"});
+    list.push_back({43, "bbb"});
+    list.push_back({667, "bbbf"});
+    list.push_back({777, "bbsb"});
+    
+    SStable mysstable(1, list, "./mydata" , policy);
+
+
+    SStable mytestTable("./mydata", policy);
+    mytestTable.devTest();
+    
+
     return 0;    
 }
 
