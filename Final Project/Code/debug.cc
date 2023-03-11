@@ -6,8 +6,6 @@
 
 std::string GetCurrentTimeStamp(int time_stamp_type = 0)
 {
-    
-
     return "";
 }
 

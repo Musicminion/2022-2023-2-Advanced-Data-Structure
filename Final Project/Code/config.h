@@ -10,7 +10,7 @@
 #define sstable_keySize 8
 
 // sstable的key的大小(Byte)
-#define sstable_keyOffset 4
+#define sstable_keyOffsetSize 4
 
 // sstable的文件偏移量(Byte)
 #define sstable_fileOffset_header 0
@@ -27,6 +27,8 @@
 // sstable文件的最大限制(2MB = 2 * 1024 * 1024)
 #define sstable_maxSize  2 * 1024 * 1024
 
+#define sstable_outOfRange "~![ERROR] Exceed Limit!~"
+
 #define memtable_not_exist "~![ERROR] MemTable No Exist!~"
 
 #define sstvalue_readFile_file "~![ERROR] No File!~"
@@ -35,7 +37,7 @@
 
 #define sstvalue_outOfRange "~![ERROR] Exceed Limit!~"
 
-
+#define delete_tag "~DELETED~"
 
 // class Config{
 // public:

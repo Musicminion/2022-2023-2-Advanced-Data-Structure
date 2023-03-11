@@ -23,3 +23,8 @@ debug: debug.o $(sstUtil)
 
 clean:
 	-rm -f correctness persistence *.o debug
+	-rm -f ./data/level-*/*.sst
+
+cleandata:
+	-rm -f ./data/level-*/*.sst
+

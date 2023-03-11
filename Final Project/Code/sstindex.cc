@@ -133,8 +133,10 @@ void SSTindex::insert(uint64_t newKey, uint32_t valOffset){
  *  @return 第i个key
  */
 uint64_t SSTindex::getKey(size_t index){
-    if(index > keyNum)
+    if(index >= keyVec.size()){
+        exit(-1);
         return -1;
+    }
     return keyVec[index];
 }
 
@@ -145,7 +147,9 @@ uint64_t SSTindex::getKey(size_t index){
  *  @return 第i个key的val的偏移量
  */
 uint32_t SSTindex::getOffset(size_t index){
-    if(index > keyNum)
+    if(index > keyNum){
+        exit(-1);
         return -1;
+    }
     return offsetVec[index];
 }

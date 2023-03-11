@@ -153,5 +153,6 @@ uint32_t BloomFliter<K,Size>::writeToFile(std::string path, uint32_t offset){
     outFile.write((char*)&bloomfliterData, Size);
     outFile.close();
 
+    
     return offset;
 }

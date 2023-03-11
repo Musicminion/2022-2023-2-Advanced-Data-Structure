@@ -46,6 +46,8 @@ uint32_t SSTvalue::writeToFile(std::string path, uint32_t offset){
         outFile.write(valVec[i].c_str(), valVec[i].size());
     }
     outFile.close();
+
+    this->valVec.clear();
     return offset;
 }
 
@@ -95,7 +97,6 @@ std::string SSTvalue::getValFromFile(std::string path, uint32_t offset, size_t l
         inFile.close();
         return sstvalue_readFile_outOfRange;
     }
-
     inFile.clear();
     // 通过检查，文件指针移动到偏移量
     inFile.seekg(offset,std::ios::beg);
@@ -103,11 +104,12 @@ std::string SSTvalue::getValFromFile(std::string path, uint32_t offset, size_t l
 
     char* readStr = new char[length];
     inFile.read(readStr, length);
-    
+
     // 拷贝到str然后删除释放空间
     std::string readResult(readStr);
-    delete [] readStr;
 
+    delete [] readStr;
+     
     inFile.close();
     return readResult;
 }

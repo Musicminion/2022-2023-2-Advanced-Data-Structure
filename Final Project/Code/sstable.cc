@@ -4,6 +4,16 @@
 SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->path = setPath;
     this->refreshCachePolicy(setCachePolicy);
+
+    // 再亲自去读取一遍获取大小
+    std::ifstream inFile(setPath, std::ios::in|std::ios::binary);
+    
+    if (inFile){
+         // 文件指针移动到末尾
+        inFile.seekg(0,std::ios::end);
+        this->fileSize = inFile.tellg();
+        inFile.close();
+    }
 }
 
 /**
@@ -28,11 +38,11 @@ SStable::SStable(
     this->header = new SSTheader();
 
     // 变量记录最大最小值
-    uint64_t curMinKey = list.begin()->first;
-    uint64_t curMaxKey = list.begin()->first;
+    uint64_t curMinKey = UINT64_MAX;
+    uint64_t curMaxKey = 0;
 
     // 初始化value偏移量起点
-    uint32_t curValueOffset = sstable_fileOffset_key + list.size() * (sstable_keySize + sstable_keyOffset);
+    uint32_t curValueOffset = sstable_fileOffset_key + list.size() * (sstable_keySize + sstable_keyOffsetSize);
     
     for(auto iter = list.begin(); iter != list.end(); iter++){
         // 更新min、max
@@ -49,7 +59,7 @@ SStable::SStable(
     }
 
     // 把value变量再移动回来，待会用
-    curValueOffset = sstable_fileOffset_key + list.size() * (sstable_keySize + sstable_keyOffset);
+    curValueOffset = sstable_fileOffset_key + list.size() * (sstable_keySize + sstable_keyOffsetSize);
 
     header->timeStamp = setTimeStamp;
     header->minKey = curMinKey;
@@ -63,6 +73,17 @@ SStable::SStable(
     value->writeToFile(setPath, curValueOffset);
 
     this->refreshCachePolicy(setCachePolicy);
+
+
+    // 再亲自去读取一遍获取文件大小！
+    std::ifstream inFile(setPath, std::ios::in|std::ios::binary);
+    
+    if (inFile){
+         // 文件指针移动到末尾
+        inFile.seekg(0,std::ios::end);
+        this->fileSize = inFile.tellg();
+        inFile.close();
+    }
 }
 
 
@@ -96,7 +117,7 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
             this->bloomFliter = NULL;
         }
             
-    }        
+    }
     else
         getBloomFliterPtr();
     // ************ index ************
@@ -129,8 +150,8 @@ SSTheader * SStable::getHeaderPtr(){
     this->cachePolicy[0] = true;
     if(this->header != NULL)
         return this->header;
-    this->header = new SSTheader(this->path, sstable_fileOffset_header);
     
+    this->header = new SSTheader(this->path, sstable_fileOffset_header);
     return this->header;  
 }
 
@@ -183,7 +204,80 @@ SSTvalue * SStable::getValuePtr(){
     refreshCachePolicy(clearPolicy);
  }
 
+/**
+ * 获取sst的kvstore时间戳
+*/
+uint64_t SStable::getSStableTimeStamp(){
+    return this->getHeaderPtr()->timeStamp;
+}
 
+/**
+ * 获取header里面的最小值 
+ */
+uint64_t SStable::getSStableMinKey(){
+    return this->getHeaderPtr()->minKey;
+}
+
+/**
+ * 获取header里面的最大值
+ */
+uint64_t SStable::getSStableMaxKey(){
+    return this->getHeaderPtr()->maxKey;
+}
+
+/**
+ * 获取header里面 key-val的数量
+*/
+uint64_t SStable::getSStableKeyValNum(){
+    return this->getHeaderPtr()->keyValNum;
+}
+
+
+/**
+ * 获取sst的第i个key
+*/
+uint64_t SStable::getSStableKey(size_t index){
+    if(index >= this->getHeaderPtr()->keyValNum)
+        return UINT64_MAX;
+    return this->getIndexPtr()->getKey(index);
+}
+
+/**
+ * 获取key对应的的偏移量
+*/
+uint32_t SStable::getSStableKeyOffset(size_t index){
+    if(index >= this->getHeaderPtr()->keyValNum)
+        return UINT32_MAX;
+    return this->getIndexPtr()->getOffset(index);
+}
+
+/**
+ * 获取value的值 index is 0-base
+*/
+std::string SStable::getSStableValue(size_t index){
+    uint64_t KVnum = this->getHeaderPtr()->keyValNum;
+    if(index >= KVnum)
+        return sstable_outOfRange;
+    
+    // 恰好是最后一个元素
+    uint32_t offset = this->getIndexPtr()->getOffset(index);
+    if(index + 1 == KVnum){
+        
+        return this->getValuePtr()->getValFromFile(this->path, 
+            offset, this->fileSize - offset);
+    }
+    // 如果不是最后一个元素，那就可以通过两个元素的偏移量之差来计算读取的长度
+    
+    uint32_t offsetNext = this->getIndexPtr()->getOffset(index + 1);
+   
+    return this->getValuePtr()->getValFromFile(this->path, 
+        offset, offsetNext - offset);
+}
+
+
+/**
+ * 开发使用的函数，输出部分调试信息
+*/
 void SStable::devTest(){
     std::cout << this->getHeaderPtr()->keyValNum << std::endl; 
     std::cout << this->getHeaderPtr()->maxKey << std::endl; 
@@ -206,3 +300,4 @@ void SStable::devTest(){
     
     
 }
+
