@@ -28,8 +28,9 @@ private:
 		phase();
 
 		// Test deletions
-		for (i = 0; i < max; i+=2)
+		for (i = 0; i < max; i+=2){
 			EXPECT(true, store.del(i));
+		}
 
 		// Prepare data for Test Mode
 		for (i = 0; i < max; ++i) {

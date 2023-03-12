@@ -29,5 +29,7 @@ public:
 
     // 拷贝所有的内容
     void copyAll(std::list<std::pair<uint64_t, std::string> > &list);
+
+    void tranverse(){this->skiplist->tranverse();}
 };
 

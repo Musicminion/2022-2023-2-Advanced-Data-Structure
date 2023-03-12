@@ -28,6 +28,7 @@ void MemTable::put(uint64_t key, const std::string &s){
     }
     // 需要比较新插入的和可能存在的已有的 value的大小
     else{
+        this->skiplist->insertNode(key, s);
         // 插入已有的，相当于编辑value，那就要考虑编辑前后的大小
         if(s.size() >= tryFind.size()){
             sstSpaceSize += s.size() - tryFind.size();
@@ -48,12 +49,17 @@ bool MemTable::del(uint64_t key){
     return true;
 }
 
-
+/*
+*   注意，不存在、和存在一个已经删除的，是两个概念！
+ */
 std::string MemTable::get(uint64_t key){
     //std::cout << "get :" << key << '\n';
     auto tryFindNode = this->skiplist->findNode(key);
     if(tryFindNode != NULL){
         std::string result = tryFindNode->val;
+        // 检查result是否为删除标记
+        if(result == delete_tag)
+            return memtable_already_deleted;
         return result;
     }
     return memtable_not_exist;

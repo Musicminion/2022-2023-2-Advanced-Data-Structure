@@ -18,7 +18,7 @@ public:
     size_t getKeyNum();
     uint64_t getKey(size_t index);
     uint32_t getOffset(size_t index);
-    uint32_t getKeyOffsetByKey(uint64_t key);
+    uint32_t getKeyIndexByKey(uint64_t key);
 
     void insert(uint64_t newKey, uint32_t valOffset);
 

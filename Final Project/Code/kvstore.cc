@@ -8,7 +8,7 @@ const bool Tiering = 0;
 const bool Leveling = 1;
 const std::string confFilePath = "./default.conf";
 
-bool cachePolicy[4] = {true, true, true, false};
+bool cachePolicy[4] = {true, true, true, true};
 
 
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
@@ -26,16 +26,50 @@ KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
 
 KVStore::~KVStore()
 {
+	// 要检查内存表是否有数据，有的话执行一次写入。
+
+	// 从内存表里面拷贝数据
+	std::list<std::pair<uint64_t, std::string> > dataAll;
+	this->memTable->copyAll(dataAll);
+
+	if(dataAll.size() > 0){
+		// 时间戳获取
+		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+		std::chrono::microseconds nsTime;
+		nsTime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+		// 文件创建 [文件名称规则，为防止重复，用的时间戳作为文件名]
+		this->sstMaxTimeStamp  = this->sstMaxTimeStamp + 1;
+		std::string newFilePath = this->dataDir + "/level-0/" + std::to_string(nsTime.count()) + ".sst";
+		SStable* newSStable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath , cachePolicy);
+		
+		// 写入类的索引里面！
+		ssTableIndex[0][nsTime.count()] = newSStable;
+
+		// 内存表格重置
+		this->memTable->reset();
+
+		// 发起归并检查，递归执行
+		int checkResult = this->mergeCheck();
+		while(checkResult > -1){
+			this->merge(checkResult);
+			// 再次发起归并检查 
+			checkResult = this->mergeCheck();
+		}
+	}
+
 	// 先释放掉内存表
 	delete this->memTable;
 
 	// 再针对文件index，一个一个删除
 	for(auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX ++){
 		for(auto iterY = ssTableIndex[iterX->first].begin(); iterY !=  ssTableIndex[iterX->first].end(); iterY++){
+			std::cout << iterX->first <<  "  "<< iterY->first << '\n';
 			delete iterY->second;
 		}
 	}
 }
+
+
 
 /**
  * Insert/Update the key-value pair.
@@ -49,11 +83,10 @@ void KVStore::put(uint64_t key, const std::string &s)
 		return;
 	}
 	// 插入检查失败。发起写入内存
-	
 	// 从内存表里面拷贝数据
 	std::list<std::pair<uint64_t, std::string> > dataAll;
 	this->memTable->copyAll(dataAll);
-	
+
 	// 时间戳获取
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     std::chrono::microseconds msTime;
@@ -63,20 +96,20 @@ void KVStore::put(uint64_t key, const std::string &s)
 	std::string newFilePath = this->dataDir + "/level-0/" + std::to_string(msTime.count()) + ".sst";
 	SStable* newSStable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath , cachePolicy);
 	
-	// 写入类的索引里面！
+	
 	ssTableIndex[0][msTime.count()] = newSStable;
 
 	// 内存表格重置
 	this->memTable->reset();
 
-	// 发起归并检查，递归检查
+	// 发起归并检查，递归执行
 	int checkResult = this->mergeCheck();
-	while(checkResult > -1){
+
+	while(checkResult != -1){
 		this->merge(checkResult);
-		// 再次发起归并检查 
 		checkResult = this->mergeCheck();
 	}
-
+	this->memTable->put(key, s);
 }
 
 /**
@@ -85,10 +118,41 @@ void KVStore::put(uint64_t key, const std::string &s)
  */
 std::string KVStore::get(uint64_t key)
 {	
+	//std::cout << "尝试获取：" << key <<'\n';;
 	std::string result = this->memTable->get(key);
+	
+	// 内存表里面找完了，看是否存在，存在就返回
+	// 发现内存表已经有了删了标记
+	if(result == memtable_already_deleted)
+		return "";
+
 	if(result != memtable_not_exist)
 		return result;
-	return "";
+
+	// 不存在，那就进入sst查找模式
+	uint64_t findLatestTimeStamp = 0;
+	for (auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX++)
+	{
+		for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
+
+			SStable * curSST = iterY->second;
+			// 检查是否可能存在
+			if(curSST->checkIfExist(key)){
+				uint32_t indexResult = curSST->getKeyIndexByKey(key);
+
+				std::string valueGet = curSST->getSStableValue(indexResult);
+				
+				if(curSST->getSStableTimeStamp() > findLatestTimeStamp){
+					findLatestTimeStamp = curSST->getSStableTimeStamp();
+					result = valueGet;
+				}
+			}
+		}
+	}
+
+	if(result == delete_tag || result == memtable_not_exist)
+		return "";
+	return result;
 }
 /**
  * Delete the given key-value pair if it exists.
@@ -96,7 +160,11 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-	return this->memTable->del(key);;
+	// std::cout << "尝试删除：" << key << '\n';
+	if(this->get(key) == "")
+		return false;
+	this->put(key, delete_tag);
+	return true;
 }
 
 /**
@@ -211,11 +279,11 @@ int KVStore::mergeCheck(){
 	return -1;
 }
 
+
 /**
  * 发起归并，归并X层和X+1层！
 */
 void KVStore::merge(uint64_t X){
-	
 	// 检查X+1层是否存在，不存在就创建一层
 	if(config_level_limit.count(X+1) == 0){
 		config_level_limit[X + 1] = config_level_limit[X] * 2;
@@ -300,12 +368,11 @@ void KVStore::merge(uint64_t X){
 		}
 	}
 
+
 	for(auto iter = ssTableSelectProcessed.begin(); iter != ssTableSelectProcessed.end(); iter++){
 		// iter->first 时间戳 iter->second 指针
-		
 		SStable * curTablePt = iter->second;
 		uint64_t KVNum = curTablePt->getSStableKeyValNum();
-		
 		for (uint64_t i = 0; i < KVNum; i++)
 		{
 			uint64_t curKey = curTablePt->getSStableKey(i);
@@ -316,6 +383,7 @@ void KVStore::merge(uint64_t X){
 
 	// 二次处理
 	std::map<uint64_t, std::string> sortMapProcessed;
+
 
 	for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
 		auto iterY = iterX->second.end();
@@ -334,7 +402,6 @@ void KVStore::merge(uint64_t X){
 	// 释放空间
 	sortMap.clear();
 
-	
 	// 可以开始插入list了
 	std::list <std::pair<uint64_t, std::string> > list;
 	uint64_t listSSTfileSize = sstable_headerSize + sstable_bfSize;
@@ -342,7 +409,7 @@ void KVStore::merge(uint64_t X){
 	for(auto iter = sortMapProcessed.begin(); iter != sortMapProcessed.end(); iter++){
 		uint64_t curKey = iter->first;
 		std::string curVal = iter->second;
-		
+
 		// 添加之后的文件增量
 		uint64_t addFileSize = sstable_keySize + sstable_keyOffsetSize + curVal.size();
 
@@ -363,9 +430,14 @@ void KVStore::merge(uint64_t X){
 			
 			list.clear();
 			listSSTfileSize = sstable_headerSize + sstable_bfSize;
+
+			// 归并之后，清空了list，现在就可以push啦！！
+			listSSTfileSize += addFileSize;
+			list.push_back({curKey, curVal});
 		}
 	}
 
+	// 如果缓存区域还有数据，继续进行sstable构建
 	if(list.size() > 0){
 		// 时间戳获取
 		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
@@ -382,6 +454,8 @@ void KVStore::merge(uint64_t X){
 	}
 
 	// 接下来要删除掉老的table(不仅要删除文件、删除指针、还要删除在mapIndex里面的索引！)
+
+	
 	for(auto iterX = ssTableSelect.begin(); iterX != ssTableSelect.end(); iterX++){
 		// iterY->first 对应 时间戳
 		// iterY->second 对应指针
@@ -390,11 +464,14 @@ void KVStore::merge(uint64_t X){
 			SStable * tableCur = iterY->second;
 			tableCur->clear();
 
+			if(tableCur != NULL)
+				delete tableCur;
 			if(ssTableIndex[iterX->first].count(iterY->first) == 1){
 				ssTableIndex[iterX->first].erase(iterY->first);
 			}
 			
-			delete tableCur;
+			
 		}
 	}
+
 }

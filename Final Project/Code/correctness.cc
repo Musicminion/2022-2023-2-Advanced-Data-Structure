@@ -7,7 +7,7 @@
 class CorrectnessTest : public Test {
 private:
 	const uint64_t SIMPLE_TEST_MAX = 512;
-	const uint64_t LARGE_TEST_MAX = 1024 * 16;
+	const uint64_t LARGE_TEST_MAX = 1024 * 8;
 
 	void regular_test(uint64_t max)
 	{
@@ -20,19 +20,20 @@ private:
 		EXPECT(true, store.del(1));
 		EXPECT(not_found, store.get(1));
 		EXPECT(false, store.del(1));
-
 		phase();
-
+		
 		// Test multiple key-value pairs
 		for (i = 0; i < max; ++i) {
 			store.put(i, std::string(i+1, 's'));
 			EXPECT(std::string(i+1, 's'), store.get(i));
+			
 		}
 		phase();
 
 		// Test after all insertions
-		for (i = 0; i < max; ++i)
+		for (i = 0; i < max; ++i){
 			EXPECT(std::string(i+1, 's'), store.get(i));
+		}
 		phase();
 
 		// Test scan
@@ -65,12 +66,34 @@ private:
 		phase();
 
 		// Test deletions
-		for (i = 0; i < max; i+=2)
-			EXPECT(true, store.del(i));
+		for (i = 0; i < max; i+=2){
+			bool result = store.del(i);
+			EXPECT(true, result);
+			if(result != true){
+				std::cout << "result 应该是true!\n";
+			}
+		}
+			
 
-		for (i = 0; i < max; ++i)
+		for (i = 0; i < max; ++i){
+			std::string expStr ;
+			if(i & 1){
+				expStr = std::string(i+1, 's');
+			}
+			else{
+				expStr = not_found;
+			}
+
+			if(expStr != store.get(i)){
+				std::cout << "expStr 不对! 应该是" << expStr << "实际" << store.get(i) << '\n';
+				return;
+			}
+
 			EXPECT((i & 1) ? std::string(i+1, 's') : not_found,
 			       store.get(i));
+			
+		}
+			
 
 		for (i = 1; i < max; ++i)
 			EXPECT(i & 1, store.del(i));

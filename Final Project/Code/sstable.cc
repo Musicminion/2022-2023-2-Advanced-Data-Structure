@@ -206,9 +206,9 @@ SSTvalue * SStable::getValuePtr(){
  void SStable::clear(){
     // 删除文件
     utils::rmfile(this->path.c_str());
-    // 删除所有指针
-    bool clearPolicy[4] = {false, false ,false, false};
-    refreshCachePolicy(clearPolicy);
+    // // 删除所有指针
+    // bool clearPolicy[4] = {false, false ,false, false};
+    // refreshCachePolicy(clearPolicy);
  }
 
 /**
@@ -283,7 +283,12 @@ std::string SStable::getSStableValue(size_t index){
         offset, offsetNext - offset);
 }
 
-
+/**
+ * 通过偏移量来获取sstable的value
+*/
+std::string SStable::getSStableValueByOffset(uint32_t offset){
+    
+}
 
 /**
  * 检查一个key是否存在在sstable里面
@@ -291,19 +296,19 @@ std::string SStable::getSStableValue(size_t index){
 bool SStable::checkIfExist(uint64_t targetKey){
     if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey)
         return false;
-
     if(this->cachePolicy[1] == true){
         return getBloomFliterPtr()->find(targetKey);
     }
-
     return true;
 }
 
 /**
  * 通过二分法查找某一个key是否存在
+ * @param key 传递的搜索目标key
+ * @return 不存在就返回UINT32_MAX,否则返回偏移量
 */
-uint32_t SStable::getKeyOffsetByKey(uint64_t key){
-    
+uint32_t SStable::getKeyIndexByKey(uint64_t key){
+    return getIndexPtr()->getKeyIndexByKey(key);
 }
 
 

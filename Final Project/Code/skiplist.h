@@ -116,9 +116,10 @@ Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
 
     // 反之，可以放心的新建节点：
     int newNode_level = randomLevel();
+
     Node<K,V>* newNode = new Node<K,V>(elemKey, elemVal, newNode_level);
     Node<K,V>* iter = head;
-
+    
     // 这个while循环是需要把迭代器移动到【要插入位置的前一个节点】！
     // 比如新的节点要插入到 A 和 B 之间，就把iter移动到 A。
     while(iter->next[0]->type != nodeType_End){
@@ -150,6 +151,7 @@ Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
         if(!ifJump)
             break;
     }
+    
 
     // iter 是经过搜索的得到的目标指针，因为涉及到链表断开重链接，所以必须把两头都拿好！
     Node<K,V>* iterNext = iter->next[0];
@@ -159,7 +161,6 @@ Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
     // |  iter  |   ->  |  newNode | -> |       iterNext      |
     // |        |       |          |    |                     |
     //  --------          --------       ---------------------
-
 
     // 更新上一个节点的 next 容器，需要把较低高度的 next 容器里面的指针，指向新的节点
     // 上一个节点的 next 容器较高的高度的 next 容器里面的指针，不需要任何操作
@@ -193,6 +194,7 @@ Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
         newNode->next[i] = iterNext;
     }
     this->size = this->size + 1;
+    
     return newNode;
 }
 
@@ -386,7 +388,8 @@ void Skiplist<K,V>::tranverse(){
         }
 
         // 输出当前的值
-        std::cout << "key: " << iter->key << " value: " << iter->val;
+        // std::cout << "key: " << iter->key << " value: " << iter->val;
+        std::cout << "key: " << iter->key << " value: [ingore]";
         std::cout << " level[ ";
         for(size_t i = 0; i < iter->next.size(); i++){
             if(iter->next[i]->type == nodeType_End)

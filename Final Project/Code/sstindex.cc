@@ -159,7 +159,7 @@ uint32_t SSTindex::getOffset(size_t index){
  * 获取key的偏移量，通过二分查找。
  * @return 不存在就返回UINT32_MAX,否则返回偏移量
 */
-uint32_t SSTindex::getKeyOffsetByKey(uint64_t key){
+uint32_t SSTindex::getKeyIndexByKey(uint64_t key){
     if(this->keyVec.size() == 0)
         return UINT32_MAX;
     if(key < keyVec[0])
@@ -188,7 +188,7 @@ uint32_t SSTindex::getKeyOffsetByKey(uint64_t key){
     }
 
     if(ifFind)
-        return offsetVec[findIndex];
+        return findIndex;
     else
         return UINT32_MAX;
 }

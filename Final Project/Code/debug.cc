@@ -4,35 +4,44 @@
 #include <sstream>
 #include <iostream>
 
-#include "sstable.h"
+#include "kvstore.h"
 
 using namespace std;
 
 int main()
 {
-    std::list <std::pair<uint64_t, std::string> > list;
 
-    for (size_t i = 0; i < 10000; i++)
-    {
-        string str = "aaaaa" + to_string(i);
-        list.push_back({i*2,str});  
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::chrono::microseconds msTime;
+    msTime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+
+    for(int i = 0; i <  100; i++){
+        cout << msTime.count() << endl;
     }
 
-    bool cachePolicy[4] = {true, true, true, false};
-    SStable mytable(32,list, "./data/level-0/test.sst", cachePolicy);
+    // std::list <std::pair<uint64_t, std::string> > list;
 
-    SStable mytable2("./data/level-0/test.sst", cachePolicy);
+    // for (size_t i = 0; i < 10000; i++)
+    // {
+    //     string str = "aaaaa" + to_string(i);
+    //     list.push_back({i*2,str});  
+    // }
 
-    for(int i = 0; i < 1000; i++){
-        cout << mytable2.getSStableKey(i) << endl;
-        cout << mytable2.getSStableKeyOffset(i) << endl;
-        cout << mytable2.getSStableValue(i) << endl;
-    }
+    // bool cachePolicy[4] = {true, true, true, false};
+    // SStable mytable(32,list, "./data/level-0/test.sst", cachePolicy);
 
-    cout << mytable2.getSStableKeyValNum()<< endl;
-    cout << mytable2.getSStableTimeStamp()<< endl;
-    cout << mytable2.getSStableMaxKey() << endl;
-    cout << mytable2.getSStableMinKey() << endl;
+    // SStable mytable2("./data/level-0/test.sst", cachePolicy);
+
+    // for(int i = 0; i < 1000; i++){
+    //     cout << mytable2.getSStableKey(i) << endl;
+    //     cout << mytable2.getSStableKeyOffset(i) << endl;
+    //     cout << mytable2.getSStableValue(i) << endl;
+    // }
+
+    // cout << mytable2.getSStableKeyValNum()<< endl;
+    // cout << mytable2.getSStableTimeStamp()<< endl;
+    // cout << mytable2.getSStableMaxKey() << endl;
+    // cout << mytable2.getSStableMinKey() << endl;
     
 
     return 0;

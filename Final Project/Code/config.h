@@ -31,6 +31,8 @@
 
 #define memtable_not_exist "~![ERROR] MemTable No Exist!~"
 
+#define memtable_already_deleted "~![ERROR] ALREADY DELETED!~"
+
 #define sstvalue_readFile_file "~![ERROR] No File!~"
 
 #define sstvalue_readFile_outOfRange "~![ERROR] Exceed Limit!~"
