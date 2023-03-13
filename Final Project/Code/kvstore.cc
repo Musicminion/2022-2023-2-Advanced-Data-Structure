@@ -81,6 +81,7 @@ void KVStore::put(uint64_t key, const std::string &s)
 		this->memTable->put(key, s);
 		return;
 	}
+	// std::cout << "开始写入磁盘 \n";
 	// 插入检查失败。发起写入内存
 	// 从内存表里面拷贝数据
 	std::list<std::pair<uint64_t, std::string> > dataAll;
