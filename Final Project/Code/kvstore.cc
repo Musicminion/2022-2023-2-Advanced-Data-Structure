@@ -253,7 +253,7 @@ void KVStore::sstFileCheck(std::string dataPath){
 		utils::scanDir(levelPathStr, scanResult);
 
 		// 针对扫描的所有文件，尝试读取
-		for(int i = 0; i <scanResult.size(); i++){
+		for(size_t i = 0; i <scanResult.size(); i++){
 			std::string fileName = scanResult[i];
 			std::string fileID = fileName.substr(0, fileName.find('.'));
 			

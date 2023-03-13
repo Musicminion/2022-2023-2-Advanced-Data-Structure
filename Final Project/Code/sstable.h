@@ -63,7 +63,6 @@ public:
     uint32_t getSStableKeyOffset(size_t index);
     uint32_t getKeyIndexByKey(uint64_t key);
     std::string getSStableValue(size_t index);
-    std::string getSStableValueByOffset(uint32_t offset);
 
 
     bool checkIfExist(uint64_t targetKey);

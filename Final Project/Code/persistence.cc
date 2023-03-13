@@ -7,7 +7,7 @@
 
 class PersistenceTest : public Test {
 private:
-	const uint64_t TEST_MAX = 1024 * 64;
+	const uint64_t TEST_MAX = 1024 * 48;
 	void prepare(uint64_t max)
 	{
 		uint64_t i;

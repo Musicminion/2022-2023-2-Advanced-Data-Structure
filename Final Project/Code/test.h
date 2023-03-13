@@ -22,13 +22,13 @@ protected:
 	{
 		++nr_tests;
 		if (exp == got) {
-			++nr_passed_tests;
+			++nr_passed_tests; 
 			return;
 		}
 		if (verbose) {
 			std::cerr << "TEST Error @" << file << ":" << line;
 			std::cerr << ", expected " << exp;
-			std::cerr << ", got " << got << std::endl;
+			std::cerr << ", got " << got<< std::endl;
 		}
 	}
 

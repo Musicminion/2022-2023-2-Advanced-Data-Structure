@@ -283,12 +283,6 @@ std::string SStable::getSStableValue(size_t index){
         offset, offsetNext - offset);
 }
 
-/**
- * 通过偏移量来获取sstable的value
-*/
-std::string SStable::getSStableValueByOffset(uint32_t offset){
-    
-}
 
 /**
  * 检查一个key是否存在在sstable里面
