@@ -139,7 +139,8 @@ std::string KVStore::get(uint64_t key)
 			// 检查是否可能存在
 			if(curSST->checkIfExist(key)){
 				uint32_t indexResult = curSST->getKeyIndexByKey(key);
-
+				if(indexResult == UINT32_MAX)
+					continue;
 				std::string valueGet = curSST->getSStableValue(indexResult);
 				
 				if(curSST->getSStableTimeStamp() > findLatestTimeStamp){
@@ -174,6 +175,15 @@ bool KVStore::del(uint64_t key)
 void KVStore::reset()
 {
 	this->memTable->reset();
+	// 再针对文件index，一个一个删除
+	for(auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX ++){
+		for(auto iterY = ssTableIndex[iterX->first].begin(); iterY !=  ssTableIndex[iterX->first].end(); iterY++){
+			iterY->second->clear();
+			delete iterY->second;
+			iterX->second.erase(iterY->first);
+		}
+	}
+	this->ssTableIndex.clear();
 }
 
 /**
