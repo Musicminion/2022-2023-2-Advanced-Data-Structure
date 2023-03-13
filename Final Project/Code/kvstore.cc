@@ -379,7 +379,7 @@ void KVStore::merge(uint64_t X){
 	}
 	
 	// 现在，需要把map变成一维的 ssTableSelectProcessed[时间戳] = 指针
-	std::map<uint64_t, SStable *> ssTableSelectProcessed;
+	std::vector<SStable *> ssTableSelectProcessed;
 	
 	// 排序使用的内存空间
 	// sortMap[key][时间戳] = stringValue
@@ -394,22 +394,23 @@ void KVStore::merge(uint64_t X){
 		// iterY->second 对应指针
 		for(auto iterY = ssTableSelect[iterX->first].begin(); iterY != ssTableSelect[iterX->first].end(); iterY++){
 			SStable * tableCur = iterY->second;
-			ssTableSelectProcessed[iterY->first] = tableCur;
+			ssTableSelectProcessed.push_back(tableCur);
 			finalWriteFileTimeStamp = std::max(tableCur->getSStableTimeStamp(), finalWriteFileTimeStamp);
 		}
 	}
 
 
-	for(auto iter = ssTableSelectProcessed.begin(); iter != ssTableSelectProcessed.end(); iter++){
+	for(size_t i = 0; i < ssTableSelectProcessed.size(); i++){
 		// iter->first 时间戳 iter->second 指针
-		SStable * curTablePt = iter->second;
+		size_t target = ssTableSelectProcessed.size() - 1 - i;
+		SStable * curTablePt = ssTableSelectProcessed[target];
 		uint64_t KVNum = curTablePt->getSStableKeyValNum();
 		for (uint64_t i = 0; i < KVNum; i++)
 		{
 			uint64_t curKey = curTablePt->getSStableKey(i);
 			std::string curVal = curTablePt->getSStableValue(i);
 			uint64_t timeStamp = curTablePt->getSStableTimeStamp();
-
+			// Bug 4744 号：根据就是是个sortMap的问题
 			sortMap[curKey][timeStamp] = curVal;
 		}
 	}
