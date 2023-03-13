@@ -405,7 +405,8 @@ void KVStore::merge(uint64_t X){
 		{
 			uint64_t curKey = curTablePt->getSStableKey(i);
 			std::string curVal = curTablePt->getSStableValue(i);
-			sortMap[curKey][iter->first] = curVal;
+			uint64_t timeStamp = curTablePt->getSStableTimeStamp();
+			sortMap[curKey][timeStamp] = curVal;
 		}
 	}
 
@@ -416,6 +417,7 @@ void KVStore::merge(uint64_t X){
 	for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
 		auto iterY = iterX->second.end();
 		if(iterX->second.size() > 0){
+			// 寻找最新的时间戳的信息
 			iterY--;
 			// 正好是删除tag，根据要求，只有当X+1是最后一层的时候，才能删除(说白了就是X+2层不存在！)
 			if(iterY->second == delete_tag && config_level_limit.count(X + 2) == 0){

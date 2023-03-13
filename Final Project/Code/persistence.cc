@@ -56,19 +56,66 @@ private:
 
 		phase();
 
-		report();
+		for (i = 0; i < max; ++i) {
+			switch (i & 3) {
+			case 0:
+				EXPECT(std::string(i+1, 't'), store.get(i));
+				break;
+			case 1:
+				EXPECT(std::string(i+1, 't'), store.get(i));
+				break;
+			case 2:
+				EXPECT(not_found, store.get(i));
+				break;
+			case 3:
+				EXPECT(std::string(i+1, 's'), store.get(i));
+				break;
+			default:
+				assert(0);
+			}
+		}
+		phase();
 
+
+		
+
+		
 		/**
 		 * Write 10MB data to drain previous data out of memory.
 		 */
 		for (i = 0; i <= 10240; ++i)
-			store.put(max + i, std::string(1024, 'x'));
+			store.put(max + i, std::string(512, 'x'));
+
+		for (i = 0; i < max; ++i) {
+			switch (i & 3) {
+			case 0:
+				EXPECT(std::string(i+1, 't'), store.get(i));
+				break;
+			case 1:
+				EXPECT(std::string(i+1, 't'), store.get(i));
+				break;
+			case 2:
+				EXPECT(not_found, store.get(i));
+				break;
+			case 3:
+				EXPECT(std::string(i+1, 's'), store.get(i));
+				break;
+			default:
+				assert(0);
+			}
+		}
+		phase();
+
+
+
+
+		report();
 
 		std::cout << "Data is ready, please press ctrl-c/ctrl-d to"
 			" terminate this program!" << std::endl;
 		std::cout.flush();
-
 		return;
+		
 
 		while (true) {
 			volatile int dummy;
@@ -100,7 +147,7 @@ private:
 			switch (i & 3) {
 			case 0:
 				if(std::string(i+1, 't') != store.get(i)){
-					std::cout   << "测试号"<<  i <<" 我的程序输出了：" << store.get(i) << '\n';
+					std::cout  << "测试号"<<  i <<" 我的程序输出了：" << store.get(i) << '\n';
 					return;
 				}
 				EXPECT(std::string(i+1, 't'), store.get(i));
