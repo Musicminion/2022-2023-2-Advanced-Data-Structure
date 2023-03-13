@@ -19,7 +19,7 @@ void MemTable::put(uint64_t key, const std::string &s){
     // if(this->putCheck(key, s) == false)
     //     return;
     // 插入节点之前，先检查节点是否存在
-    Node<uint64_t, std::__1::string> * tryFind = this->skiplist->findNode(key);
+    Node<uint64_t, std::string> * tryFind = this->skiplist->findNode(key);
 
     // 插入全新的key-value对，就需要把sstSpaceSize更新
     if(tryFind == NULL){
@@ -117,7 +117,7 @@ bool MemTable::putCheck(uint64_t key, const std::string &s){
     // valSpace
     size_t valSpace = s.size();
 
-    Node<uint64_t, std::__1::string> * tryFind = this->skiplist->findNode(key);
+    Node<uint64_t, std::string> * tryFind = this->skiplist->findNode(key);
 
     if(tryFind == NULL){
         if(sstSpaceSize + keySpace + valSpace <= sstable_maxSize)
