@@ -142,7 +142,8 @@ std::string KVStore::get(uint64_t key)
 				if(indexResult == UINT32_MAX)
 					continue;
 				std::string valueGet = curSST->getSStableValue(indexResult);
-				
+				if(valueGet == sstable_outOfRange)
+					continue;
 				if(curSST->getSStableTimeStamp() > findLatestTimeStamp){
 					findLatestTimeStamp = curSST->getSStableTimeStamp();
 					result = valueGet;
@@ -416,6 +417,15 @@ void KVStore::merge(uint64_t X){
 
 
 	for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
+		// uint64_t maxTimeStamp = 0;
+		// std::string latestValue = "";
+		// for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
+		// 	if(iterY->first > maxTimeStamp){
+		// 		maxTimeStamp = iterY->first;
+		// 		latestValue = iterY->second;
+		// 		sortMapProcessed[maxTimeStamp] = latestValue;
+		// 	}
+		// }
 		auto iterY = iterX->second.end();
 		if(iterX->second.size() > 0){
 			// 寻找最新的时间戳的信息
@@ -479,7 +489,7 @@ void KVStore::merge(uint64_t X){
 			
 		SStable* newSStable = new SStable(finalWriteFileTimeStamp, list, newFilePath, cachePolicy);
 		this->ssTableIndex[X+1][msTime.count()] = newSStable;
-			
+
 		list.clear();
 		listSSTfileSize = sstable_headerSize + sstable_bfSize;			
 	}
