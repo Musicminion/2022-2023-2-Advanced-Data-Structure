@@ -316,27 +316,47 @@ void KVStore::merge(uint64_t X){
 	else if(config_level_type[X] == Leveling){
 		// 确定要选择的文件数量
 		int selectNum = ssTableIndex[X].size() - config_level_limit[X];
-		auto iter = ssTableIndex[X].begin();
+		int alreadyChooseNum = 0;
+		// auto iter = ssTableIndex[X].begin();
 
-		// 因为index里面就是按照时间顺序排列的，放心的选择前selectNum个
-		for(int i = 0; i < selectNum; i++){
-			if(iter !=  ssTableIndex[X].end()){
-				ssTableSelect[X][iter->first] = iter->second;
-				iter++;
-			}	
+		// 需要根据文件里面的时间戳，选择前面的selectNum个
+		// 创建一个排序用的表 sortMap[时间戳][minKey]
+		std::map<uint64_t, std::map<uint64_t, SStable*> > sortMap;
+		std::map<uint64_t, std::map<uint64_t, uint64_t> > tableName;
+
+		for(auto iter = ssTableIndex[X].begin(); iter != ssTableIndex[X].end(); iter++){
+			// iter->first 代表文件名.sst前面的数字
+			SStable * curTable = iter->second;
+			uint64_t timeStamp = curTable->getSStableTimeStamp();
+			uint64_t minKey = curTable->getSStableMinKey();
+			
+			sortMap[timeStamp][minKey] = curTable;
+			tableName[timeStamp][minKey] = iter->first;
 		}
+
+		for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
+			for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
+				if(alreadyChooseNum < selectNum){
+					uint64_t curFileID = tableName[iterX->first][iterY->first];
+					
+					ssTableSelect[X][curFileID] = iterY->second; 
+					alreadyChooseNum++;
+				}
+			}
+		}
+
 	}
 	
 	// 如果X+1层是leveling
 	if(config_level_type[X+1] == Leveling){
 		
-		if(ssTableIndex[X].size() > 0){
+		if(ssTableSelect[X].size() > 0){
 			// 获取最小的key、最大的key！
 			uint64_t LevelXminKey = UINT64_MAX;
 			uint64_t LevelXmaxKey = 0;
 			// iter 遍历 计算LevelX的最小最大key！
 
-			for(auto iter = ssTableIndex[X].begin(); iter != ssTableIndex[X].end(); iter++){
+			for(auto iter = ssTableSelect[X].begin(); iter != ssTableSelect[X].end(); iter++){
 				SStable * curSStable = iter->second;
 				LevelXminKey = std::min(LevelXminKey, curSStable->getSStableMinKey());
 				LevelXmaxKey = std::max(LevelXmaxKey, curSStable->getSStableMaxKey());
