@@ -179,7 +179,6 @@ void KVStore::reset()
 		for(auto iterY = ssTableIndex[iterX->first].begin(); iterY !=  ssTableIndex[iterX->first].end(); iterY++){
 			iterY->second->clear();
 			delete iterY->second;
-			iterX->second.erase(iterY->first);
 		}
 	}
 	this->ssTableIndex.clear();
@@ -338,7 +337,7 @@ void KVStore::merge(uint64_t X){
 			for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
 				if(alreadyChooseNum < selectNum){
 					uint64_t curFileID = tableName[iterX->first][iterY->first];
-					
+
 					ssTableSelect[X][curFileID] = iterY->second; 
 					alreadyChooseNum++;
 				}
