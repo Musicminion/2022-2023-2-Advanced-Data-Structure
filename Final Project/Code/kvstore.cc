@@ -410,7 +410,10 @@ void KVStore::merge(uint64_t X){
 			uint64_t curKey = curTablePt->getSStableKey(i);
 			std::string curVal = curTablePt->getSStableValue(i);
 			uint64_t timeStamp = curTablePt->getSStableTimeStamp();
-			// Bug 4744 号：根据就是是个sortMap的问题
+			// Bug 4744 号：根据就是是个sortMap的问题，相同key、相同时间戳可能吗？可能！
+			// 这个bug不修复会导致5%的数据过不了！因为merge的时候，会把时间戳修改，导致可能同一个key出现两个一样的时间戳
+			// 并且分布在不同的文件里面！所以解决方法就是，选择较小的楼层即可（因为数据更新！）
+			// 因为我在存储的时候ssTableSelectProcessed是按照X层、X+1层来的，所以我这里倒过来遍历即可！
 			sortMap[curKey][timeStamp] = curVal;
 		}
 	}
@@ -420,28 +423,6 @@ void KVStore::merge(uint64_t X){
 
 
 	for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
-		// if(iterX->first == 4744){
-		// 	std::cout << "开始输出4744号的归并信息：\n";
-		// 	for(auto iterY = iterX->second.begin();  iterY != iterX->second.end(); iterY++){
-		// 		std::cout << "时间戳：" << iterY->first << "的value前10个信息是" << iterY->second.substr(0,10) <<
-		// 		"value的长度是" << iterY->second.size() << "\n";
-		// 	}
-		// 	auto iterY = iterX->second.end();
-		// 	iterY--;
-		// 	std::cout << X << "层归并，选择的是(前10个)："<<  iterY->second.substr(0,10) << "归并之后时间戳" << finalWriteFileTimeStamp <<  std::endl;
-		// 	std::cout << "\n";
-
-		// }
-
-		// uint64_t maxTimeStamp = 0;
-		// std::string latestValue = "";
-		// for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
-		// 	if(iterY->first > maxTimeStamp){
-		// 		maxTimeStamp = iterY->first;
-		// 		latestValue = iterY->second;
-		// 		sortMapProcessed[maxTimeStamp] = latestValue;
-		// 	}
-		// }
 		auto iterY = iterX->second.end();
 		if(iterX->second.size() > 0){
 			// 寻找最新的时间戳的信息
