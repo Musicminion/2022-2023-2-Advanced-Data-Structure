@@ -7,7 +7,7 @@
 
 class PersistenceTest : public Test {
 private:
-	const uint64_t TEST_MAX = 1024 * 48;
+	const uint64_t TEST_MAX = 1024 * 64;
 	void prepare(uint64_t max)
 	{
 		uint64_t i;
@@ -96,15 +96,35 @@ private:
 		for (i = 0; i < max; ++i) {
 			switch (i & 3) {
 			case 0:
+				if(std::string(i+1, 't') != store.get(i)){
+					std::cout << "测试编号:" << i <<  ",应该输出 [t] 的个数是" << i + 1 << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "\n";
+				}
 				EXPECT(std::string(i+1, 't'), store.get(i));
 				break;
 			case 1:
+				if(std::string(i+1, 't') != store.get(i)){
+					std::cout << "测试编号:" << i <<  ",应该输出 [t] 的个数是" << i + 1 << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "\n";
+				}
 				EXPECT(std::string(i+1, 't'), store.get(i));
 				break;
 			case 2:
+				if(not_found != store.get(i)){
+					std::cout << "测试编号:" << i <<  ",应该输出找不到" << i + 1 << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "\n";
+				}
 				EXPECT(not_found, store.get(i));
 				break;
 			case 3:
+				if(std::string(i+1, 's') != store.get(i)){
+					std::cout << "测试编号:" << i <<  ",应该输出 [s] 的个数是" << i + 1 << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "\n";
+				}
 				EXPECT(std::string(i+1, 's'), store.get(i));
 				break;
 			default:

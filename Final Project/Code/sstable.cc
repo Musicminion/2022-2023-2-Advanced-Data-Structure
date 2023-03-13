@@ -1,6 +1,7 @@
 #include "sstable.h"
 #include "utils.h"
 
+
 SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->path = setPath;
     // 初始化的事情必须把这个指针指向NULL，因为后面判断会用到！
@@ -36,6 +37,7 @@ SStable::SStable(
     uint64_t setTimeStamp,
     std::list <std::pair<uint64_t, std::string> > &list,
     std::string setPath, bool setCachePolicy[4]){
+        
 
     this->path = setPath;
     // 先处理BF过滤器
@@ -288,6 +290,7 @@ std::string SStable::getSStableValue(size_t index){
  * 检查一个key是否存在在sstable里面
 */
 bool SStable::checkIfExist(uint64_t targetKey){
+    return true;
     if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey)
         return false;
     if(this->cachePolicy[1] == true){

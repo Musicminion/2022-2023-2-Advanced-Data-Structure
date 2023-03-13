@@ -12,8 +12,10 @@ bool cachePolicy[4] = {true, true, true, true};
 
 
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
-{
+{	
+	// 初始化目录和已有的最大时间戳
 	this->dataDir = dir;
+	this->sstMaxTimeStamp = 0;
 	// 读取配置文件
 	this->readConfig(confFilePath);
 	// 根据配置文件执行文件检查，如果存在文件，就读取到缓存
@@ -118,7 +120,6 @@ void KVStore::put(uint64_t key, const std::string &s)
  */
 std::string KVStore::get(uint64_t key)
 {	
-	//std::cout << "尝试获取：" << key <<'\n';;
 	std::string result = this->memTable->get(key);
 	
 	// 内存表里面找完了，看是否存在，存在就返回
@@ -144,7 +145,7 @@ std::string KVStore::get(uint64_t key)
 				std::string valueGet = curSST->getSStableValue(indexResult);
 				if(valueGet == sstable_outOfRange)
 					continue;
-				if(curSST->getSStableTimeStamp() > findLatestTimeStamp){
+				if(curSST->getSStableTimeStamp() >= findLatestTimeStamp){
 					findLatestTimeStamp = curSST->getSStableTimeStamp();
 					result = valueGet;
 				}
@@ -408,6 +409,7 @@ void KVStore::merge(uint64_t X){
 			uint64_t curKey = curTablePt->getSStableKey(i);
 			std::string curVal = curTablePt->getSStableValue(i);
 			uint64_t timeStamp = curTablePt->getSStableTimeStamp();
+
 			sortMap[curKey][timeStamp] = curVal;
 		}
 	}
@@ -417,6 +419,19 @@ void KVStore::merge(uint64_t X){
 
 
 	for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
+		// if(iterX->first == 4744){
+		// 	std::cout << "开始输出4744号的归并信息：\n";
+		// 	for(auto iterY = iterX->second.begin();  iterY != iterX->second.end(); iterY++){
+		// 		std::cout << "时间戳：" << iterY->first << "的value前10个信息是" << iterY->second.substr(0,10) <<
+		// 		"value的长度是" << iterY->second.size() << "\n";
+		// 	}
+		// 	auto iterY = iterX->second.end();
+		// 	iterY--;
+		// 	std::cout << X << "层归并，选择的是(前10个)："<<  iterY->second.substr(0,10) << "归并之后时间戳" << finalWriteFileTimeStamp <<  std::endl;
+		// 	std::cout << "\n";
+
+		// }
+
 		// uint64_t maxTimeStamp = 0;
 		// std::string latestValue = "";
 		// for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
@@ -432,6 +447,10 @@ void KVStore::merge(uint64_t X){
 			iterY--;
 			// 正好是删除tag，根据要求，只有当X+1是最后一层的时候，才能删除(说白了就是X+2层不存在！)
 			if(iterY->second == delete_tag && config_level_limit.count(X + 2) == 0){
+				continue;
+			}
+			// 如果是最后一层，那就删除掉deletetag！
+			if(iterY->second == delete_tag && ssTableIndex[X + 2].size() == 0){
 				continue;
 			}
 			// 不是删除tag，保留这个元素
