@@ -63,7 +63,6 @@ KVStore::~KVStore()
 	// 再针对文件index，一个一个删除
 	for(auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX ++){
 		for(auto iterY = ssTableIndex[iterX->first].begin(); iterY !=  ssTableIndex[iterX->first].end(); iterY++){
-			std::cout << iterX->first <<  "  "<< iterY->first << '\n';
 			delete iterY->second;
 		}
 	}
@@ -352,7 +351,7 @@ void KVStore::merge(uint64_t X){
 				if(curMaxKey < LevelXminKey || curMinKey > LevelXmaxKey)
 					continue;
 				// 反之有重叠，选择！
-				ssTableSelect[X][iter->first] = curSStable;
+				ssTableSelect[X+1][iter->first] = curSStable;
 			}
 		}		
 	}
