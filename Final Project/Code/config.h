@@ -41,11 +41,5 @@
 
 #define delete_tag "~DELETED~"
 
-// class Config{
-// public:
-//     // sstable的大小(Byte)
-//     const size_t sstable_bfSize = 10240;
-    
-//     
-//     const size_t sstable_maxSize = 2 * 1024 * 1024;
-// }config;
+
+#define logFilePath "./WAL.log"

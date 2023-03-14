@@ -9,6 +9,7 @@
 #include <cassert>
 #include <map>
 #include <list>
+#include "config.h"
 #include "utils.h"
 
 // 三种节点类型
@@ -24,7 +25,7 @@ const int log_putID = 0;
 const int log_delID = 1;
 const std::string log_putStr = "PUT";
 const std::string log_delStr = "DEL";
-const std::string logFilePath = "./WAL.log";
+
 
 
 // 跳表的节点，包括四种类型的数据：右侧节点、上层节点、当前节点的Key和Val
@@ -62,23 +63,31 @@ private:
     size_t size;
     Node<K, V> *head;
     int randomLevel();
+    // 增删查节点的函数
+    Node<K,V>* insertNode(K elemKey, V elemVal);
+    Node<K,V>* findNode(K elemKey);
+    void deleteNode(K elemKey);
+
+     // 日志操作
+    void writeLog(std::string path, int operationID, K key, V val);
+    void restoreFromLog(std::string path);
+
 public:
     Skiplist();
     ~Skiplist();
 
     // 增删查节点的函数
-    Node<K,V>* insertNode(K elemKey, V elemVal);
-    Node<K,V>* findNode(K elemKey);
-    void deleteNode(K elemKey);
+    Node<K,V>* insert(K elemKey, V elemVal);
+    Node<K,V>* find(K elemKey);
+    void remove(K elemKey);
+
+
     void copyAll(std::list<std::pair<K, V> > &list);
 
     size_t getSize();
-    void clear();
+    void clear(std::string path);
     void tranverse();
 
-    // 日志操作
-    void writeLog(std::string path, int operationID, K key, V val);
-    void restoreFromLog(std::string path);
 };
 
 // 产生一个随机的楼层，返回一个大于1,小于等于max level的Int
@@ -114,7 +123,7 @@ Skiplist<K,V>::Skiplist(){
 template<typename K, typename V>
 Skiplist<K,V>::~Skiplist(){
     // 清空元素
-    this->clear();
+    this->clear(logFilePath);
     // 删除尾巴节点、head节点
     delete head->next[0];
     delete head;
@@ -123,7 +132,6 @@ Skiplist<K,V>::~Skiplist(){
 // 插入节点[或者编辑一个已有的节点]
 template<typename K, typename V>
 Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
-    this->writeLog(logFilePath, log_putID, elemKey, elemVal);
 
     std::map<int, std::vector<Node<K,V>*> > findPath;
     // 如果这个节点已经存在，根据要求需要替换里面的数据
@@ -264,10 +272,6 @@ Node<K,V>* Skiplist<K,V>::findNode(K elemKey){
 // 删除节点
 template<typename K, typename V>
 void Skiplist<K,V>::deleteNode(K elemKey){
-    // 写日志
-    V emptyVal;
-    this->writeLog(logFilePath, log_delID, elemKey, emptyVal);
-
     std::map<int, std::vector<Node<K,V>*> > findPath;
     // 如果这个节点已经存在，根据要求需要替换里面的数据
     Node<K,V>* delNode = this->findNode(elemKey);
@@ -360,8 +364,8 @@ size_t Skiplist<K,V>::getSize(){
 
 // 清空表格里面的数据节点，不包括头结点、尾部节点
 template<typename K, typename V>
-void Skiplist<K,V>::clear(){
-    utils::rmfile(logFilePath.c_str());
+void Skiplist<K,V>::clear(std::string logPath){
+    utils::rmfile(logFilePath);
     Node<K,V>* iter = head;
     Node<K,V>* del_node;
     while(iter->type != nodeType_End){
@@ -495,5 +499,39 @@ void Skiplist<K,V>::restoreFromLog(std::string path){
 				this->deleteNode(key);
 			}	
 		}
+        utils::rmfile(path.c_str());
 	}
+}
+
+/**
+ * 对外暴露的插入函数，会写日志
+*/
+template<typename K, typename V>
+Node<K,V>* Skiplist<K,V>::insert(K elemKey, V elemVal){
+    this->writeLog(logFilePath, log_putID, elemKey, elemVal);
+    // 插入节点
+    return this->insertNode(elemKey, elemVal);
+}
+
+
+/**
+ * 对外暴露的查找函数，暂且不写日志
+*/
+template<typename K, typename V>
+Node<K,V>* Skiplist<K,V>::find(K elemKey){
+
+    return this->findNode(elemKey);
+}
+
+/**
+ * 对外暴露的删除函数，会写日志
+*/
+template<typename K, typename V>
+void Skiplist<K,V>::remove(K elemKey){
+    // 写日志
+    V emptyVal;
+    this->writeLog(logFilePath, log_delID, elemKey, emptyVal);
+    
+    // 删除节点
+    this->deleteNode(elemKey);
 }

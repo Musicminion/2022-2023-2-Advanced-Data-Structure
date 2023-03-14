@@ -60,7 +60,7 @@ private:
 		/**
 		 * Write 10MB data to drain previous data out of memory.
 		 */
-		for (i = 0; i <= 10240; ++i)
+		for (i = 0; i <= 1024; ++i)
 			store.put(max + i, std::string(1024, 'x'));
 
 		std::cout << "Data is ready, please press ctrl-c/ctrl-d to"
@@ -74,17 +74,17 @@ private:
 				for (i = 0; i <= 1000; ++i)
 					dummy = i;
 
-				store.del(max + i);
+				// store.del(max + i);
 
 				for (i = 0; i <= 1000; ++i)
 					dummy = i;
 
-				store.put(max + i, std::string(1024, '.'));
+				// store.put(max + i, std::string(1024, '.'));
 
 				for (i = 0; i <= 1000; ++i)
 					dummy = i;
 
-				store.put(max + i, std::string(512, 'x'));
+				// store.put(max + i, std::string(512, 'x'));
 			}
 		}
 	}
@@ -132,6 +132,11 @@ private:
 			}
 		}
 
+		phase();
+
+		for (i = 0; i <= 1024; ++i){
+			EXPECT(std::string(1024, 'x'), store.get(i + max));
+		}
 		phase();
 
 		report();

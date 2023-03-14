@@ -179,6 +179,7 @@ bool KVStore::del(uint64_t key)
  */
 void KVStore::reset()
 {
+	utils::rmfile(logFilePath);
 	this->memTable->reset();
 	// 再针对文件index，一个一个删除
 	for(auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX ++){
@@ -188,7 +189,6 @@ void KVStore::reset()
 		}
 	}
 	this->ssTableIndex.clear();
-
 }
 
 /**

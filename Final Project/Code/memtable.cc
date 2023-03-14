@@ -19,16 +19,16 @@ void MemTable::put(uint64_t key, const std::string &s){
     // if(this->putCheck(key, s) == false)
     //     return;
     // 插入节点之前，先检查节点是否存在
-    Node<uint64_t, std::string> * tryFind = this->skiplist->findNode(key);
+    Node<uint64_t, std::string> * tryFind = this->skiplist->find(key);
 
     // 插入全新的key-value对，就需要把sstSpaceSize更新
     if(tryFind == NULL){
-        this->skiplist->insertNode(key, s);
+        this->skiplist->insert(key, s);
         sstSpaceSize += (s.size() + sizeof(uint32_t) + sizeof(uint64_t));
     }
     // 需要比较新插入的和可能存在的已有的 value的大小
     else{
-        this->skiplist->insertNode(key, s);
+        this->skiplist->insert(key, s);
         // 插入已有的，相当于编辑value，那就要考虑编辑前后的大小
         if(s.size() >= tryFind->val.size()){
             sstSpaceSize += s.size() - tryFind->val.size();
@@ -43,9 +43,9 @@ void MemTable::put(uint64_t key, const std::string &s){
 
 bool MemTable::del(uint64_t key){
     //std::cout << "del :" << key << '\n';
-    if(this->skiplist->findNode(key) == NULL)
+    if(this->skiplist->find(key) == NULL)
         return false;
-    this->skiplist->deleteNode(key);
+    this->skiplist->remove(key);
     return true;
 }
 
@@ -54,7 +54,7 @@ bool MemTable::del(uint64_t key){
  */
 std::string MemTable::get(uint64_t key){
     //std::cout << "get :" << key << '\n';
-    auto tryFindNode = this->skiplist->findNode(key);
+    auto tryFindNode = this->skiplist->find(key);
     if(tryFindNode != NULL){
         std::string result = tryFindNode->val;
         // 检查result是否为删除标记
@@ -70,7 +70,7 @@ std::string MemTable::get(uint64_t key){
  */
 void MemTable::reset(){
     // 重置之后，首先清空跳表数据，一种是直接删指针，一种是调用clear函数，均可
-    this->skiplist->clear();
+    this->skiplist->clear(logFilePath);
     // delete this->skiplist;
     // skiplist = new Skiplist<uint64_t, std::string>();
     // 然后把当前维护的转换到sst的大小计算出来
@@ -81,10 +81,10 @@ void MemTable::reset(){
 *   扫描内存表，扫描Key1到Key2直接的数据
  */
 void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string> > &list){
-    Node<uint64_t, std::string>* iter = this->skiplist->findNode(key1);
+    Node<uint64_t, std::string>* iter = this->skiplist->find(key1);
     // 如果key1不存在 那就手动插入一个 key 1然后再完成之后删除掉。
     if(iter == NULL){
-        iter = this->skiplist->insertNode(key1, "");
+        iter = this->skiplist->insert(key1, "");
         // 跳过自己，因为已经证实自己不存在
         iter = iter->next[0];
         
@@ -94,7 +94,7 @@ void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, 
             iter = iter->next[0];
         }
         // 查找完成后记得把自己添加的元素删除
-        this->skiplist->deleteNode(key1);
+        this->skiplist->remove(key1);
     }
     // 如果key1存在，那就正常查找
     else{
@@ -122,7 +122,7 @@ bool MemTable::putCheck(uint64_t key, const std::string &s){
     // valSpace
     size_t valSpace = s.size();
 
-    Node<uint64_t, std::string> * tryFind = this->skiplist->findNode(key);
+    Node<uint64_t, std::string> * tryFind = this->skiplist->find(key);
 
     if(tryFind == NULL){
         if(sstSpaceSize + keySpace + valSpace <= sstable_maxSize)
