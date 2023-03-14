@@ -226,8 +226,20 @@ void KVStore::readConfig(std::string path){
 */
 void KVStore::writeConfig(std::string path){
 	/**
-	 * To Do 
+	 * To Do 项目结束后完成
 	*/
+	std::ofstream infile;
+  	infile.open(path);
+
+	for(auto iter = config_level_limit.begin(); iter != config_level_limit.end(); iter++){
+		uint64_t levelID = iter->first;
+		uint64_t levelLimit = iter->second;
+		uint64_t levelTypeNum = config_level_type[levelID];
+		std::string levelTypeStr = (levelTypeNum == Tiering )? "Tiering" : "Leveling";
+
+		infile <<  levelID << " " << levelLimit << " " << levelTypeStr << "\n";
+	}
+	infile.close();
 }
 
 
@@ -304,6 +316,9 @@ void KVStore::merge(uint64_t X){
 		// 新建的层还需要创建目录
 		std::string levelPathStr = this->dataDir + "/" + "level-" + std::to_string(X+1);
 		utils::mkdir(levelPathStr.c_str());
+
+		// 及时把层的变更写入到配置文件中
+		this->writeConfig(confFilePath);
 	}
 	// 现在我们需要进入sstable选择阶段，选择好sstable用map存储
 	// ssTableSelect[层数][时间戳]
