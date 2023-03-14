@@ -4,12 +4,15 @@
 #include <sstream>
 #include <chrono>
 
+// 层级配置
 const bool Tiering = 0;
 const bool Leveling = 1;
+
+// 缓存策略
 const std::string confFilePath = "./default.conf";
 
-bool cachePolicy[4] = {true, true, true, true};
 
+bool cachePolicy[4] = {true, true, true, true};
 
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
 {	
@@ -77,7 +80,7 @@ KVStore::~KVStore()
  * No return values for simplicity.
  */
 void KVStore::put(uint64_t key, const std::string &s)
-{	
+{
 	// 发起插入检查！通过插入检查之后，直接插入，退出
 	if(this->memTable->putCheck(key,s)){
 		this->memTable->put(key, s);
@@ -185,6 +188,7 @@ void KVStore::reset()
 		}
 	}
 	this->ssTableIndex.clear();
+
 }
 
 /**
@@ -206,6 +210,7 @@ void KVStore::readConfig(std::string path){
 	std::ifstream infile;
   	infile.open(path);
 	
+
 	uint64_t level,limit;
 	std::string levelType;
 
@@ -532,3 +537,4 @@ void KVStore::merge(uint64_t X){
 	}
 
 }
+

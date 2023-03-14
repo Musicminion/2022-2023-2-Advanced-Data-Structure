@@ -4,10 +4,12 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <climits>
 #include <cassert>
 #include <map>
 #include <list>
+#include "utils.h"
 
 // 三种节点类型
 const int nodeType_Head = 1;
@@ -15,6 +17,15 @@ const int nodeType_Data = 2;
 const int nodeType_End = 3;
 const int MAX_Level = 8;
 const double Jump_Probaility = 0.5;
+
+
+// WAL日志相关
+const int log_putID = 0;
+const int log_delID = 1;
+const std::string log_putStr = "PUT";
+const std::string log_delStr = "DEL";
+const std::string logFilePath = "./WAL.log";
+
 
 // 跳表的节点，包括四种类型的数据：右侧节点、上层节点、当前节点的Key和Val
 template<typename K, typename V>
@@ -64,6 +75,10 @@ public:
     size_t getSize();
     void clear();
     void tranverse();
+
+    // 日志操作
+    void writeLog(std::string path, int operationID, K key, V val);
+    void restoreFromLog(std::string path);
 };
 
 // 产生一个随机的楼层，返回一个大于1,小于等于max level的Int
@@ -91,6 +106,8 @@ Skiplist<K,V>::Skiplist(){
     }
     // 设置，数据的大小为0
     this->size = 0;
+
+    this->restoreFromLog(logFilePath);
 }
 
 // 销毁一个跳表
@@ -106,6 +123,8 @@ Skiplist<K,V>::~Skiplist(){
 // 插入节点[或者编辑一个已有的节点]
 template<typename K, typename V>
 Node<K,V>* Skiplist<K,V>::insertNode(K elemKey, V elemVal){
+    this->writeLog(logFilePath, log_putID, elemKey, elemVal);
+
     std::map<int, std::vector<Node<K,V>*> > findPath;
     // 如果这个节点已经存在，根据要求需要替换里面的数据
     Node<K,V>* tryFind = this->findNode(elemKey);
@@ -245,6 +264,10 @@ Node<K,V>* Skiplist<K,V>::findNode(K elemKey){
 // 删除节点
 template<typename K, typename V>
 void Skiplist<K,V>::deleteNode(K elemKey){
+    // 写日志
+    V emptyVal;
+    this->writeLog(logFilePath, log_delID, elemKey, emptyVal);
+
     std::map<int, std::vector<Node<K,V>*> > findPath;
     // 如果这个节点已经存在，根据要求需要替换里面的数据
     Node<K,V>* delNode = this->findNode(elemKey);
@@ -338,6 +361,7 @@ size_t Skiplist<K,V>::getSize(){
 // 清空表格里面的数据节点，不包括头结点、尾部节点
 template<typename K, typename V>
 void Skiplist<K,V>::clear(){
+    utils::rmfile(logFilePath.c_str());
     Node<K,V>* iter = head;
     Node<K,V>* del_node;
     while(iter->type != nodeType_End){
@@ -416,4 +440,60 @@ void Skiplist<K,V>::copyAll(std::list<std::pair<K, V> > &list){
         // 迭代器后移动
         iter = iter->next[0];
     }
+}
+
+
+
+/**
+ * 写日志操作
+ * 参考资料：https://blog.csdn.net/hcf999/article/details/77864456
+*/
+template<typename K, typename V>
+void Skiplist<K,V>::writeLog(std::string path, int operationID, K key, V val){
+	// 尝试打开文件
+	std::ofstream outFile(path, std::fstream::out| std::fstream::app);
+
+	switch (operationID)
+	{
+	case log_putID:
+		outFile << log_putStr << " " << key << " " << val << "\n";
+		break;
+	case log_delID:
+		outFile << log_delStr << " " << key  << "\n";
+		break;
+	default:
+		break;
+	}
+
+	outFile.close();
+}
+
+
+
+/**
+ * 从日志恢复内存表
+*/
+template<typename K, typename V>
+void Skiplist<K,V>::restoreFromLog(std::string path){
+	std::ifstream inFile;
+	inFile.open(path);
+
+	std::string operationType;
+	K key;
+	V val;
+
+	// 如果配置文件存在，那就读取
+	if(inFile.is_open()){
+		while(inFile >> operationType){
+			if(operationType == log_putStr){
+				inFile >> key;
+				inFile >> val;
+				this->insertNode(key, val);
+			}
+			if(operationType == log_delStr){
+				inFile >> key;
+				this->deleteNode(key);
+			}	
+		}
+	}
 }

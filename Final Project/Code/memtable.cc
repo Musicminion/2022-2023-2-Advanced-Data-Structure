@@ -65,16 +65,21 @@ std::string MemTable::get(uint64_t key){
     return memtable_not_exist;
 }
 
-
+/*
+*   重置内存表，会删除所有的内存表里面的数据
+ */
 void MemTable::reset(){
-    // 重置之后，首先清空跳表数据
-    delete this->skiplist;
-    skiplist = new Skiplist<uint64_t, std::string>();
+    // 重置之后，首先清空跳表数据，一种是直接删指针，一种是调用clear函数，均可
+    this->skiplist->clear();
+    // delete this->skiplist;
+    // skiplist = new Skiplist<uint64_t, std::string>();
     // 然后把当前维护的转换到sst的大小计算出来
     sstSpaceSize = sstable_headerSize + sstable_bfSize;
 }
 
-
+/*
+*   扫描内存表，扫描Key1到Key2直接的数据
+ */
 void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string> > &list){
     Node<uint64_t, std::string>* iter = this->skiplist->findNode(key1);
     // 如果key1不存在 那就手动插入一个 key 1然后再完成之后删除掉。
@@ -136,6 +141,9 @@ bool MemTable::putCheck(uint64_t key, const std::string &s){
     return false;
 }
 
+/*
+*   拷贝内存表，记录内存表的所有数据
+ */
 void MemTable::copyAll(std::list<std::pair<uint64_t, std::string> > &list){
     this->skiplist->copyAll(list);
 }

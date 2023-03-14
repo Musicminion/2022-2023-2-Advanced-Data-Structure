@@ -33,6 +33,7 @@ private:
 	int mergeCheck();
 	void merge(uint64_t X);
 
+
 public:
 	// ********************************************************
 	KVStore(const std::string &dir);
