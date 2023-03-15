@@ -238,13 +238,6 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
 		list.push_back({iter->first, iter->second});
 	}
 
-	// 调试用！
-	// for(auto iter = mergeList.begin(); iter != mergeList.end(); iter++){
-	// 	if(iter->first % 4 ==0)
-	// 		std::cout << "\n";
-	// 	std::cout << iter->first << " " << iter->second.substr(0,10) << "\n";
-
-	// }
 }
 
 

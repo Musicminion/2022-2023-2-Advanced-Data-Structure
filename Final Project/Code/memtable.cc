@@ -1,20 +1,30 @@
 #include "memtable.h"
 
+// WAL日志相关
+const int log_putID = 0;
+const int log_delID = 1;
+const std::string log_putStr = "PUT";
+const std::string log_delStr = "DEL";
+
+
 MemTable::MemTable()
 {
     skiplist = new Skiplist<uint64_t, std::string>();
     // 初始化占用的sst大小为 头部的header和bf过滤器的size
     sstSpaceSize = sstable_headerSize + sstable_bfSize;
+
+    this->restoreFromLog(logFilePath);
 }
 
 
 MemTable::~MemTable()
 {
+    utils::rmfile(logFilePath);
     delete skiplist;
 }
 
-
-void MemTable::put(uint64_t key, const std::string &s){
+void MemTable::putKV(uint64_t key, const std::string &s){
+    // 是否发起安全检查待考证！
     // 确保安全，再发起一次插入检查
     // if(this->putCheck(key, s) == false)
     //     return;
@@ -40,13 +50,28 @@ void MemTable::put(uint64_t key, const std::string &s){
 }
 
 
-
-bool MemTable::del(uint64_t key){
-    //std::cout << "del :" << key << '\n';
-    if(this->skiplist->find(key) == NULL)
+bool MemTable::delKV(uint64_t key){
+    auto tryFind = this->skiplist->find(key); 
+    if(tryFind == NULL)
         return false;
+    // 占用的空间要减回去
+    sstSpaceSize -= tryFind->val.size();
     this->skiplist->remove(key);
     return true;
+}
+
+
+
+
+void MemTable::put(uint64_t key, const std::string &s){
+    this->writeLog(logFilePath, log_putID, key, s);
+    this->putKV(key, s);
+}
+
+
+bool MemTable::del(uint64_t key){
+    this->writeLog(logFilePath, log_delID, key, "");
+    return this->delKV(key);
 }
 
 /*
@@ -69,8 +94,9 @@ std::string MemTable::get(uint64_t key){
 *   重置内存表，会删除所有的内存表里面的数据
  */
 void MemTable::reset(){
+    utils::rmfile(logFilePath);
     // 重置之后，首先清空跳表数据，一种是直接删指针，一种是调用clear函数，均可
-    this->skiplist->clear(logFilePath);
+    this->skiplist->clear();
     // delete this->skiplist;
     // skiplist = new Skiplist<uint64_t, std::string>();
     // 然后把当前维护的转换到sst的大小计算出来
@@ -154,4 +180,59 @@ bool MemTable::putCheck(uint64_t key, const std::string &s){
  */
 void MemTable::copyAll(std::list<std::pair<uint64_t, std::string> > &list){
     this->skiplist->copyAll(list);
+}
+
+
+
+/**
+ * 写日志操作
+ * 参考资料：https://blog.csdn.net/hcf999/article/details/77864456
+*/
+
+void MemTable::writeLog(std::string path, int operationID, uint64_t key, std::string val){
+	// 尝试打开文件
+	std::ofstream outFile(path, std::fstream::out| std::fstream::app);
+
+	switch (operationID)
+	{
+	case log_putID:
+		outFile << log_putStr << " " << key << " " << val << "\n";
+		break;
+	case log_delID:
+		outFile << log_delStr << " " << key  << "\n";
+		break;
+	default:
+		break;
+	}
+
+	outFile.close();
+}
+
+
+
+/**
+ * 从日志恢复内存表
+*/
+void MemTable::restoreFromLog(std::string path){
+	std::ifstream inFile;
+	inFile.open(path);
+
+	std::string operationType;
+	uint64_t key;
+	std::string val;
+
+	// 如果配置文件存在，那就读取
+	if(inFile.is_open()){
+		while(inFile >> operationType){
+			if(operationType == log_putStr){
+				inFile >> key;
+				inFile >> val;
+				this->putKV(key, val);
+			}
+			if(operationType == log_delStr){
+				inFile >> key;
+				this->delKV(key);
+			}	
+		}
+	}
 }
