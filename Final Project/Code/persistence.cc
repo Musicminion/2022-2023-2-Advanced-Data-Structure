@@ -7,7 +7,7 @@
 
 class PersistenceTest : public Test {
 private:
-	const uint64_t TEST_MAX = 1024 * 8;
+	const uint64_t TEST_MAX = 1024 * 32;
 	void prepare(uint64_t max)
 	{
 		uint64_t i;
@@ -55,6 +55,7 @@ private:
 
 		phase();
 
+
 		report();
 
 		/**
@@ -76,7 +77,7 @@ private:
 
 				// store.del(max + i);
 
-				for (i = 0; i <= 1000; ++i)
+				// for (i = 0; i <= 1000; ++i)
 					dummy = i;
 
 				// store.put(max + i, std::string(1024, '.'));
@@ -98,7 +99,7 @@ private:
 			case 0:
 				if(std::string(i+1, 't') != store.get(i)){
 					std::cout << "测试编号:" << i <<  ",应该输出 [t] 的个数是" << i + 1 << std::endl;
-					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << " " << store.get(i).substr(0,10)  << std::endl;
 					std::cout << "\n";
 				}
 				EXPECT(std::string(i+1, 't'), store.get(i));
@@ -106,7 +107,7 @@ private:
 			case 1:
 				if(std::string(i+1, 't') != store.get(i)){
 					std::cout << "测试编号:" << i <<  ",应该输出 [t] 的个数是" << i + 1 << std::endl;
-					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << " " << store.get(i).substr(0,10)  << std::endl;
 					std::cout << "\n";
 				}
 				EXPECT(std::string(i+1, 't'), store.get(i));
@@ -114,7 +115,7 @@ private:
 			case 2:
 				if(not_found != store.get(i)){
 					std::cout << "测试编号:" << i <<  ",应该输出找不到" << i + 1 << std::endl;
-					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << " " << store.get(i).substr(0,10)  << std::endl;
 					std::cout << "\n";
 				}
 				EXPECT(not_found, store.get(i));
@@ -122,7 +123,7 @@ private:
 			case 3:
 				if(std::string(i+1, 's') != store.get(i)){
 					std::cout << "测试编号:" << i <<  ",应该输出 [s] 的个数是" << i + 1 << std::endl;
-					std::cout << "实际输出的长度是 " << store.get(i).size() << std::endl;
+					std::cout << "实际输出的长度是 " << store.get(i).size() << " " << store.get(i).substr(0,10)  << std::endl;
 					std::cout << "\n";
 				}
 				EXPECT(std::string(i+1, 's'), store.get(i));
@@ -134,9 +135,57 @@ private:
 
 		phase();
 
+		
+		
 		for (i = 0; i <= 1024; ++i){
 			EXPECT(std::string(1024, 'x'), store.get(i + max));
 		}
+		phase();
+
+		
+		// Test scan
+		std::list<std::pair<uint64_t, std::string> > list_ans;
+		std::list<std::pair<uint64_t, std::string> > list_stu;
+		store.scan(max / 4, 3 * max / 4,list_stu);
+		
+		for (i = max / 4; i <= 3 * max / 4; ++i){
+			switch (i & 3) {
+				case 0:
+					list_ans.push_back({i,std::string(i+1, 't')});
+					break;
+				case 1:
+					list_ans.push_back({i,std::string(i+1, 't')});
+					break;
+				case 2:
+					break;
+				case 3:
+					list_ans.push_back({i,std::string(i+1, 's')});
+					break;
+				default:
+					assert(0);
+			}
+		}
+
+		std::cout << list_ans.size() << " " << list_stu.size() << "\n";
+
+		EXPECT(list_ans.size(), list_stu.size());
+		auto ap = list_ans.begin();
+		auto sp = list_stu.begin();
+		while(ap != list_ans.end()) {
+			if (sp == list_stu.end()) {
+				EXPECT((*ap).first, -1);
+				EXPECT((*ap).second, not_found);
+				ap++;
+			}
+			else {
+				EXPECT((*ap).first, (*sp).first);
+				EXPECT((*ap).second, (*sp).second);
+				ap++;
+				sp++;
+			}
+		}
+
+
 		phase();
 
 		report();

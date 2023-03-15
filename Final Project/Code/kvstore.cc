@@ -21,7 +21,7 @@ KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
 	this->sstMaxTimeStamp = 0;
 	// 读取配置文件
 	this->readConfig(confFilePath);
-	// 根据配置文件执行文件检查，如果存在文件，就读取到缓存
+	// 根据配置文件执行文件检查，如果存在文件，就读取到缓存，刷新sstMaxTimeStamp
 	this->sstFileCheck(dir);
 
 	// 创建MemTable
@@ -37,12 +37,17 @@ KVStore::~KVStore()
 	std::list<std::pair<uint64_t, std::string> > dataAll;
 	this->memTable->copyAll(dataAll);
 
+	// for(auto iter = dataAll.begin(); iter != dataAll.end(); iter++){
+	// 	std::cout << iter->first << iter->second << "\n";
+	// }
+
 	if(dataAll.size() > 0){
 		// 时间戳获取
 		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 		std::chrono::microseconds nsTime;
 		nsTime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
 		// 文件创建 [文件名称规则，为防止重复，用的时间戳作为文件名]
+
 		this->sstMaxTimeStamp  = this->sstMaxTimeStamp + 1;
 		std::string newFilePath = this->dataDir + "/level-0/" + std::to_string(nsTime.count()) + ".sst";
 		SStable* newSStable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath , cachePolicy);
@@ -55,7 +60,7 @@ KVStore::~KVStore()
 
 		// 发起归并检查，递归执行
 		int checkResult = this->mergeCheck();
-		while(checkResult > -1){
+		while(checkResult != -1){
 			this->merge(checkResult);
 			// 再次发起归并检查 
 			checkResult = this->mergeCheck();
@@ -135,13 +140,15 @@ std::string KVStore::get(uint64_t key)
 
 	// 不存在，那就进入sst查找模式
 	uint64_t findLatestTimeStamp = 0;
-	for (auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX++)
+	// 修复2865号错误，必须查找的之后从最旧的去找，遇到更新的就覆盖
+	// 大概的原则是：先leve-(大号码)，后level塔尖，因为相同key相同时间戳可能出现！
+	for (auto iterX = ssTableIndex.rbegin(); iterX != ssTableIndex.rend(); iterX++)
 	{
 		for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
 
 			SStable * curSST = iterY->second;
 			// 检查是否可能存在
-			if(curSST->checkIfExist(key)){
+			if(curSST->checkIfKeyExist(key)){
 				uint32_t indexResult = curSST->getKeyIndexByKey(key);
 				if(indexResult == UINT32_MAX)
 					continue;
@@ -195,10 +202,49 @@ void KVStore::reset()
  * Return a list including all the key-value pair between key1 and key2.
  * keys in the list should be in an ascending order.
  * An empty string indicates not found.
+ * @param key1 : 扫描的起点key，不要求存在
+ * @param key2 : 扫描的终点key。
  */
 void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string> > &list)
 {
-	this->memTable->scan(key1, key2, list);
+	// scanMap[key][时间戳] = value
+	std::map<uint64_t, std::map<uint64_t, std::string> > scanMap; 
+	std::map<uint64_t, std::string> mergeList;
+
+	// 扫描的时候，先从最底层开始扫描，然后往上层。这是因为相同key、相同时间戳，
+	// 优先保留上层的数据，所以采取层方面倒序
+	for(auto iterX = ssTableIndex.rbegin(); iterX != ssTableIndex.rend(); iterX++){
+		for (auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
+			SStable * curTable = iterY->second;
+			curTable->scan(key1, key2, scanMap);	
+		}
+	}
+
+	for(auto keyIter = scanMap.begin(); keyIter != scanMap.end(); keyIter++){
+		if(keyIter->second.size() > 0){
+			auto valIter =keyIter->second.end();
+			valIter--;
+			// 把最新的时间戳的key-val放进去
+			mergeList[keyIter->first] = valIter->second;
+		}
+	}
+
+	// 创建一个list用来存储内存表的扫描结果
+
+	this->memTable->scan(key1, key2, mergeList);
+
+	// 把结果返回
+	for(auto iter = mergeList.begin(); iter != mergeList.end(); iter++){
+		list.push_back({iter->first, iter->second});
+	}
+
+	// 调试用！
+	// for(auto iter = mergeList.begin(); iter != mergeList.end(); iter++){
+	// 	if(iter->first % 4 ==0)
+	// 		std::cout << "\n";
+	// 	std::cout << iter->first << " " << iter->second.substr(0,10) << "\n";
+
+	// }
 }
 
 
@@ -284,7 +330,6 @@ void KVStore::sstFileCheck(std::string dataPath){
 
 			// 初始化读取的时候，更新当前最大的时间戳
 			this->sstMaxTimeStamp = std::max(newTable->getSStableTimeStamp(), this->sstMaxTimeStamp);
-			
 			ssTableIndex[iter->first][fileIDNum] = newTable;
 		}
 	}
@@ -409,10 +454,10 @@ void KVStore::merge(uint64_t X){
 	// 遍历过程中，找到最终写到文件内部的时间戳（根据要求，是所有选择文件里面的最大的时间戳！）
 	uint64_t finalWriteFileTimeStamp = 0;
 
-	for(auto iterX = ssTableSelect.begin(); iterX != ssTableSelect.end(); iterX++){
+	for(auto iterX = ssTableSelect.rbegin(); iterX != ssTableSelect.rend(); iterX++){
 		// iterY->first 对应 时间戳
 		// iterY->second 对应指针
-		for(auto iterY = ssTableSelect[iterX->first].begin(); iterY != ssTableSelect[iterX->first].end(); iterY++){
+		for(auto iterY = ssTableSelect[iterX->first].rbegin(); iterY != ssTableSelect[iterX->first].rend(); iterY++){
 			SStable * tableCur = iterY->second;
 			ssTableSelectProcessed.push_back(tableCur);
 			finalWriteFileTimeStamp = std::max(tableCur->getSStableTimeStamp(), finalWriteFileTimeStamp);
@@ -422,8 +467,7 @@ void KVStore::merge(uint64_t X){
 
 	for(size_t i = 0; i < ssTableSelectProcessed.size(); i++){
 		// iter->first 时间戳 iter->second 指针
-		size_t target = ssTableSelectProcessed.size() - 1 - i;
-		SStable * curTablePt = ssTableSelectProcessed[target];
+		SStable * curTablePt = ssTableSelectProcessed[i];
 		uint64_t KVNum = curTablePt->getSStableKeyValNum();
 		for (uint64_t i = 0; i < KVNum; i++)
 		{
@@ -531,8 +575,6 @@ void KVStore::merge(uint64_t X){
 			if(ssTableIndex[iterX->first].count(iterY->first) == 1){
 				ssTableIndex[iterX->first].erase(iterY->first);
 			}
-			
-			
 		}
 	}
 

@@ -192,3 +192,39 @@ uint32_t SSTindex::getKeyIndexByKey(uint64_t key){
     else
         return UINT32_MAX;
 }
+
+/**
+ * 获取key的偏移量，通过二分查找。
+ * @return 不存在就返回比他稍微大一点的key的，否则返回偏移量
+ * 边界1：如果key比最小的还要小，返回 0 
+ * 边界2：如果key比最大的还要大，返回 UINT32_MAX (处理着需要考虑)
+*/
+uint32_t SSTindex::getKeyOrLargerIndexByKey(uint64_t key){
+    if(this->keyVec.size() == 0)
+        return UINT32_MAX;
+    if(key < keyVec[0])
+        return 0;
+    if(key > keyVec[ keyVec.size() - 1])
+        return UINT32_MAX;
+    
+    uint32_t left = 0;
+    uint32_t right =  keyVec.size() - 1;
+    uint32_t mid;
+    uint32_t findIndex = 0;
+    while(left <= right){
+        mid = left + ((right - left) / 2);
+        if(keyVec[mid] == key){
+            findIndex = mid;
+            break;
+        }
+        else if(keyVec[mid] > key){
+            right = mid - 1;
+        }
+        else if(keyVec[mid] < key){
+            left = mid + 1;
+            findIndex = left;
+        }
+    }
+
+    return findIndex;
+}

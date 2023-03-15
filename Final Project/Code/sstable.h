@@ -7,7 +7,7 @@
 #include "sstvalue.h"
 #include "config.h"
 #include <list>
-
+#include <map>
 
 class SStable{
 private:
@@ -62,10 +62,14 @@ public:
     uint64_t getSStableKey(size_t index);
     uint32_t getSStableKeyOffset(size_t index);
     uint32_t getKeyIndexByKey(uint64_t key);
+    uint32_t getKeyOrLargerIndexByKey(uint64_t key);
     std::string getSStableValue(size_t index);
 
 
-    bool checkIfExist(uint64_t targetKey);
+    bool checkIfKeyExist(uint64_t targetKey);
+
+    void scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uint64_t, std::string> >  &scanMap);
+
 
     SStable();
     ~SStable();

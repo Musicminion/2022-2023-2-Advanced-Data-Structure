@@ -1,6 +1,7 @@
 #include "sstable.h"
 #include "utils.h"
 
+SStable::SStable(){}
 
 SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->path = setPath;
@@ -289,7 +290,7 @@ std::string SStable::getSStableValue(size_t index){
 /**
  * 检查一个key是否存在在sstable里面
 */
-bool SStable::checkIfExist(uint64_t targetKey){
+bool SStable::checkIfKeyExist(uint64_t targetKey){
     return true;
     if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey)
         return false;
@@ -308,30 +309,97 @@ uint32_t SStable::getKeyIndexByKey(uint64_t key){
     return getIndexPtr()->getKeyIndexByKey(key);
 }
 
+/**
+ * 通过二分法查找某一个key或者比他稍微大一点的key的偏移量
+ * @param key 传递的搜索目标key
+ * @return 不存在就返回比他稍微大一点的key的，否则返回偏移量
+ * 边界1：如果key比最小的还要小，返回 0 
+ * 边界2：如果key比最大的还要大，返回 UINT32_MAX (处理着需要考虑)
+*/
+uint32_t SStable::getKeyOrLargerIndexByKey(uint64_t key){
+    return getIndexPtr()->getKeyOrLargerIndexByKey(key);
+}
+
+
+
+/**
+ * 扫描某个范围的数据，存储到scanMap里面
+ * @param key1 扫描的起点key
+ * @param key2 扫描的终点key [key1， key2]
+ * @param scanMap 扫描的Map
+*/
+void SStable::scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uint64_t, std::string> > &scanMap){
+    // 获取起点的key是第几个key
+    uint32_t startKeyIndex = this->getKeyOrLargerIndexByKey(key1);
+
+    // 比最大的还要大，或者这个sst没有数据，不处理
+    if(startKeyIndex == UINT32_MAX)
+        return;
+
+    // 写入当前的时间戳 key 
+    uint64_t curSStabelTimeStamp = this->getSStableTimeStamp();
+    for (size_t i = startKeyIndex; i < this->getSStableKeyValNum(); i++)
+    {
+        uint64_t curKey = getSStableKey(i);
+        if(curKey > key2)
+            break;
+    
+        // 代码优化：如果没有key，或者这个key对应找到的信息，不存在
+        if(scanMap.count(curKey) == 0 || scanMap[curKey].size() == 0){
+            std::string val = getSStableValue(i);
+            if(val != delete_tag)
+                scanMap[curKey][curSStabelTimeStamp] = getSStableValue(i);
+        }
+        else{
+            // 这个key已经存在
+            auto iterLatestKV = scanMap[curKey].end();
+            iterLatestKV--;
+            // 自己时间戳更大(注意，因为扫描顺序是底层往上，所以哪怕等于，处理逻辑是直接覆盖)
+            std::string val = getSStableValue(i);
+            if(curSStabelTimeStamp >= iterLatestKV->first){
+                if(val != delete_tag){
+                    // 删除旧的数据，节约空间
+                    scanMap[curKey].clear();
+                    scanMap[curKey][curSStabelTimeStamp] = val;
+                }
+                // 遇到新的删除标记，需要清空！
+                else
+                    scanMap[curKey].clear();
+            }
+            // 否则自己的时间戳更小，那就不需要做任何操作
+        }
+    }
+
+}
+
+
 
 /**
  * 开发使用的函数，输出部分调试信息
 */
 void SStable::devTest(){
-    std::cout << this->getHeaderPtr()->keyValNum << std::endl; 
-    std::cout << this->getHeaderPtr()->maxKey << std::endl; 
-    std::cout << this->getHeaderPtr()->minKey << std::endl; 
-    std::cout << this->getHeaderPtr()->timeStamp << std::endl; 
+    /**
+     * Delete When Project End!
+     * TO BE DELETED
+    */
 
-    std::cout << this->getBloomFliterPtr()->find(667) << std::endl;
-    std::cout << this->getBloomFliterPtr()->find(777) << std::endl;
-    std::cout << this->getBloomFliterPtr()->find(55) << std::endl;
-    std::cout << this->getBloomFliterPtr()->find(44) << std::endl;
+    // std::cout << this->getHeaderPtr()->keyValNum << std::endl; 
+    // std::cout << this->getHeaderPtr()->maxKey << std::endl; 
+    // std::cout << this->getHeaderPtr()->minKey << std::endl; 
+    // std::cout << this->getHeaderPtr()->timeStamp << std::endl; 
+
+    // std::cout << this->getBloomFliterPtr()->find(667) << std::endl;
+    // std::cout << this->getBloomFliterPtr()->find(777) << std::endl;
+    // std::cout << this->getBloomFliterPtr()->find(55) << std::endl;
+    // std::cout << this->getBloomFliterPtr()->find(44) << std::endl;
     
 
-    SSTindex * tmp = this->getIndexPtr();
-    size_t num = tmp->getKeyNum();
+    // SSTindex * tmp = this->getIndexPtr();
+    // size_t num = tmp->getKeyNum();
 
-    for (size_t i = 0; i < num; i++)
-    {
-        std::cout << tmp->getKey(i) << " " << tmp->getOffset(i) - sstable_fileOffset_key << "\n";
-    }
-    
-    
+    // for (size_t i = 0; i < num; i++)
+    // {
+    //     std::cout << tmp->getKey(i) << " " << tmp->getOffset(i) - sstable_fileOffset_key << "\n";
+    // }
 }
 

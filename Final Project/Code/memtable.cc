@@ -78,9 +78,10 @@ void MemTable::reset(){
 }
 
 /*
-*   扫描内存表，扫描Key1到Key2直接的数据
+ *  扫描内存表，扫描Key1到Key2直接的数据，
+ *  扫描会排除已经删除的数据
  */
-void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string> > &list){
+void MemTable::scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::string> &resultMap){
     Node<uint64_t, std::string>* iter = this->skiplist->find(key1);
     // 如果key1不存在 那就手动插入一个 key 1然后再完成之后删除掉。
     if(iter == NULL){
@@ -90,7 +91,12 @@ void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, 
         
         while (iter->type == nodeType_Data && iter->key <= key2)
         {
-            list.push_back({iter->key,iter->val});
+            // 不要把已经删除了的数据插入
+            if(iter->val != delete_tag)
+                resultMap[iter->key] = iter->val;
+            // 删除的数据，必须强制抹掉！内存表时间优先级MAX！
+            else
+                resultMap.erase(iter->key);
             iter = iter->next[0];
         }
         // 查找完成后记得把自己添加的元素删除
@@ -98,13 +104,15 @@ void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, 
     }
     // 如果key1存在，那就正常查找
     else{
-        if(iter->key == key1){
-            list.push_back({iter->key,iter->val});
+        // 增加检查是否为deleteTag！
+        if(iter->key == key1 && iter->val != delete_tag){
+            resultMap[iter->key] = iter->val;
         }
         iter = iter->next[0];
         while (iter->type == nodeType_Data && iter->key <= key2)
         {
-            list.push_back({iter->key,iter->val});
+            if(iter->val != delete_tag)
+                resultMap[iter->key] = iter->val;
             iter = iter->next[0];
         }
     }

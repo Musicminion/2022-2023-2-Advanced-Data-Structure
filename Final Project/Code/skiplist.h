@@ -499,7 +499,6 @@ void Skiplist<K,V>::restoreFromLog(std::string path){
 				this->deleteNode(key);
 			}	
 		}
-        utils::rmfile(path.c_str());
 	}
 }
 

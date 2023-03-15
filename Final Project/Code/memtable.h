@@ -25,7 +25,7 @@ public:
 
     void reset();
 
-    void scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string> > &list);
+    void scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::string> &resultMap);
 
     // 拷贝所有的内容
     void copyAll(std::list<std::pair<uint64_t, std::string> > &list);

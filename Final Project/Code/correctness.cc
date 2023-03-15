@@ -7,7 +7,7 @@
 class CorrectnessTest : public Test {
 private:
 	const uint64_t SIMPLE_TEST_MAX = 512;
-	const uint64_t LARGE_TEST_MAX = 1024 * 8;
+	const uint64_t LARGE_TEST_MAX = 1024 * 32;
 
 	void regular_test(uint64_t max)
 	{
@@ -49,6 +49,7 @@ private:
 
 		auto ap = list_ans.begin();
 		auto sp = list_stu.begin();
+
 		while(ap != list_ans.end()) {
 			if (sp == list_stu.end()) {
 				EXPECT((*ap).first, -1);
@@ -93,8 +94,7 @@ private:
 			       store.get(i));
 			
 		}
-			
-
+		
 		for (i = 1; i < max; ++i)
 			EXPECT(i & 1, store.del(i));
 
