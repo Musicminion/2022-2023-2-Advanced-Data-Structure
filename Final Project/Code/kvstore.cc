@@ -140,29 +140,63 @@ std::string KVStore::get(uint64_t key)
 
 	// 不存在，那就进入sst查找模式
 	uint64_t findLatestTimeStamp = 0;
+	// 旧的查找代码
 	// 修复2865号错误，必须查找的之后从最旧的去找，遇到更新的就覆盖
 	// 大概的原则是：先leve-(大号码)，后level塔尖，因为相同key相同时间戳可能出现！
-	for (auto iterX = ssTableIndex.rbegin(); iterX != ssTableIndex.rend(); iterX++)
-	{
-		for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
+	// for (auto iterX = ssTableIndex.rbegin(); iterX != ssTableIndex.rend(); iterX++)
+	// {
+	// 	for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
 
+	// 		SStable * curSST = iterY->second;
+	// 		// 检查是否可能存在
+	// 		if(curSST->checkIfKeyExist(key)){
+	// 			uint32_t indexResult = curSST->getKeyIndexByKey(key);
+	// 			if(indexResult == UINT32_MAX)
+	// 				continue;
+	// 			std::string valueGet = curSST->getSStableValue(indexResult);
+	// 			if(valueGet == sstable_outOfRange)
+	// 				continue;
+	// 			if(curSST->getSStableTimeStamp() >= findLatestTimeStamp){
+	// 				findLatestTimeStamp = curSST->getSStableTimeStamp();
+	// 				result = valueGet;
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	// 新的查找代码 找到就不查找老的sst文件了！
+	for (auto iterX = ssTableIndex.begin(); iterX != ssTableIndex.end(); iterX++)
+	{
+		bool ifFind = false;
+
+		// 按照层查找，找到立马返回，
+		for(auto iterY = iterX->second.rbegin(); iterY != iterX->second.rend(); iterY++){
 			SStable * curSST = iterY->second;
 			// 检查是否可能存在
 			if(curSST->checkIfKeyExist(key)){
 				uint32_t indexResult = curSST->getKeyIndexByKey(key);
+				// 不存在，下一个
 				if(indexResult == UINT32_MAX)
 					continue;
+				
 				std::string valueGet = curSST->getSStableValue(indexResult);
 				if(valueGet == sstable_outOfRange)
 					continue;
 				if(curSST->getSStableTimeStamp() >= findLatestTimeStamp){
 					findLatestTimeStamp = curSST->getSStableTimeStamp();
 					result = valueGet;
+					ifFind = true;
 				}
 			}
 		}
+
+		if(ifFind && result == delete_tag)
+			return "";
+		else if(ifFind)
+			return result;
 	}
 
+	// 所有的都没查找成功
 	if(result == delete_tag || result == memtable_not_exist)
 		return "";
 	return result;
