@@ -291,7 +291,6 @@ std::string SStable::getSStableValue(size_t index){
  * 检查一个key是否存在在sstable里面
 */
 bool SStable::checkIfKeyExist(uint64_t targetKey){
-    return true;
     if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey)
         return false;
     if(this->cachePolicy[1] == true){
@@ -373,6 +372,14 @@ void SStable::scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uin
 }
 
 
+/**
+ * 保存当前的缓存策略，保存到 savedCachePolicy
+*/
+void SStable::saveCachePolicy(){
+    for(int i = 0; i < 4; i++){
+        savedCachePolicy[i] = cachePolicy[i];
+    }
+}
 
 /**
  * 开发使用的函数，输出部分调试信息
