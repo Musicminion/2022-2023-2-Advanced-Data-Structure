@@ -11,6 +11,9 @@ SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->value = NULL;
     this->header = NULL;
 
+    // 先按照读取文件的缓存策略，全部读取信息
+    bool readFilePolicy[4] = {true, true, true, true};
+    this->refreshCachePolicy(readFilePolicy);
 
     // 再亲自去读取一遍获取大小
     std::ifstream inFile(setPath, std::ios::in|std::ios::binary);
@@ -21,7 +24,7 @@ SStable::SStable(std::string setPath, bool setCachePolicy[4]){
         this->fileSize = inFile.tellg();
         inFile.close();
     }
-
+    // 最后按照设定的缓存策略，完成刷新
     this->refreshCachePolicy(setCachePolicy);
 }
 
