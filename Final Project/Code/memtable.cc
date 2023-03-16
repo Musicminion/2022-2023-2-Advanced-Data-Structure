@@ -217,22 +217,45 @@ void MemTable::restoreFromLog(std::string path){
 	std::ifstream inFile;
 	inFile.open(path);
 
+    std::string rowLog;
 	std::string operationType;
 	uint64_t key;
 	std::string val;
 
 	// 如果配置文件存在，那就读取
 	if(inFile.is_open()){
-		while(inFile >> operationType){
-			if(operationType == log_putStr){
-				inFile >> key;
-				inFile >> val;
-				this->putKV(key, val);
-			}
-			if(operationType == log_delStr){
-				inFile >> key;
-				this->delKV(key);
-			}	
-		}
+        while(std::getline(inFile,rowLog)){
+            std::vector<size_t> spaceIndex;
+
+            // 扫描空格的位置
+            for(size_t i = 0; i < rowLog.size(); i++){
+                if(rowLog[i] == ' '){
+                    spaceIndex.push_back(i);
+                }
+
+                if(spaceIndex.size() == 2)
+                    break;
+                if(spaceIndex.size() == 1 && rowLog.substr(0, spaceIndex[0]) == log_delStr)
+                    break;
+            }
+
+            if(spaceIndex.size() == 1){
+                operationType = rowLog.substr(0, spaceIndex[0]);
+                std::stringstream keyStringStream(rowLog.substr(spaceIndex[0] + 1, spaceIndex[1] - spaceIndex[0] - 1));
+                keyStringStream >> key;
+
+                this->delKV(key);
+            }
+            else if(spaceIndex.size() == 2){
+                operationType = rowLog.substr(0, spaceIndex[0]);
+
+                std::stringstream keyStringStream(rowLog.substr(spaceIndex[0] + 1, spaceIndex[1] - spaceIndex[0] - 1));
+                keyStringStream >> key;
+
+                val = rowLog.substr(spaceIndex[1] + 1);
+
+                this->putKV(key, val);
+            }
+        }
 	}
 }
