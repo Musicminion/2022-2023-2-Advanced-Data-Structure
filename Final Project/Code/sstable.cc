@@ -11,9 +11,7 @@ SStable::SStable(std::string setPath, bool setCachePolicy[4]){
     this->value = NULL;
     this->header = NULL;
 
-    // 刷新缓存策略本质上会读文件
-    this->refreshCachePolicy(setCachePolicy);
-    
+
     // 再亲自去读取一遍获取大小
     std::ifstream inFile(setPath, std::ios::in|std::ios::binary);
     
@@ -23,6 +21,8 @@ SStable::SStable(std::string setPath, bool setCachePolicy[4]){
         this->fileSize = inFile.tellg();
         inFile.close();
     }
+
+    this->refreshCachePolicy(setCachePolicy);
 }
 
 /**
@@ -117,18 +117,26 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
         }
         this->cachePolicy[0] = false;
     }
-    else
-        getHeaderPtr();
+    else{
+        // 只有当header为null的时候才会尝试调用
+        if(this->header == NULL)
+             getHeaderPtr();
+    }
+       
+    
     // ************ BF ************
     if(setCachePolicy[1] == false){
         if(this->bloomFliter != NULL){
             delete this->bloomFliter;
             this->bloomFliter = NULL;
         }
-            
     }
-    else
-        getBloomFliterPtr();
+    else{
+        // 只有当BF为null的时候才会尝试调用
+        if(this->bloomFliter == NULL)
+            getBloomFliterPtr();
+    }
+        
     
     // ************ index ************
     if(setCachePolicy[2] == false){
@@ -137,8 +145,10 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
             this->index = NULL;
         }
     }
-    else
-        getIndexPtr();
+    else{
+        if(this->index == NULL)
+            getIndexPtr();
+    }
     
     // ************ value ************
     if(setCachePolicy[3] == false){
@@ -147,8 +157,10 @@ void SStable::refreshCachePolicy(bool setCachePolicy[4]){
             this->value = NULL;
         }
     }
-    else
-        getValuePtr();
+    else{
+        if(this->value == NULL)
+            getValuePtr();
+    } 
 }
 
 /**
@@ -186,9 +198,12 @@ SSTindex * SStable::getIndexPtr(){
     this->cachePolicy[2] = true;
     if(this->index != NULL)
         return this->index;
+    
+    // 警告，这里不需要保存，否则反而可能死循环
     uint64_t kvNum = (this->getHeaderPtr())->keyValNum;
-    this->index = new SSTindex(this->path, sstable_fileOffset_key, kvNum);
 
+
+    this->index = new SSTindex(this->path, sstable_fileOffset_key, kvNum);
     return this->index;
 }
 
@@ -218,28 +233,45 @@ SSTvalue * SStable::getValuePtr(){
  * 获取sst的kvstore时间戳
 */
 uint64_t SStable::getSStableTimeStamp(){
-    return this->getHeaderPtr()->timeStamp;
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+    uint64_t retVal = this->getHeaderPtr()->timeStamp;
+    this->refreshCachePolicy(savedCachePolicy);
+
+    return retVal;
 }
 
 /**
  * 获取header里面的最小值 
  */
 uint64_t SStable::getSStableMinKey(){
-    return this->getHeaderPtr()->minKey;
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+    uint64_t retVal = this->getHeaderPtr()->minKey;
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 /**
  * 获取header里面的最大值
  */
 uint64_t SStable::getSStableMaxKey(){
-    return this->getHeaderPtr()->maxKey;
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+    uint64_t retVal = this->getHeaderPtr()->maxKey;
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 /**
  * 获取header里面 key-val的数量
 */
 uint64_t SStable::getSStableKeyValNum(){
-    return this->getHeaderPtr()->keyValNum;
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+    uint64_t retVal = this->getHeaderPtr()->keyValNum;
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 
@@ -247,43 +279,70 @@ uint64_t SStable::getSStableKeyValNum(){
  * 获取sst的第i个key
 */
 uint64_t SStable::getSStableKey(size_t index){
-    if(index >= this->getHeaderPtr()->keyValNum)
+    // 保存旧的缓存策略
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+
+    uint64_t retVal = UINT64_MAX;
+
+    if(index >= this->getHeaderPtr()->keyValNum){
+        this->refreshCachePolicy(savedCachePolicy);
         return UINT64_MAX;
-    return this->getIndexPtr()->getKey(index);
+    }
+    else{
+        retVal = this->getIndexPtr()->getKey(index);
+    }
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 /**
  * 获取key对应的的偏移量
 */
 uint32_t SStable::getSStableKeyOffset(size_t index){
-    if(index >= this->getHeaderPtr()->keyValNum)
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+    if(index >= this->getHeaderPtr()->keyValNum){
+        this->refreshCachePolicy(savedCachePolicy);
         return UINT32_MAX;
-    return this->getIndexPtr()->getOffset(index);
+    }
+    uint32_t retVal = this->getIndexPtr()->getOffset(index);
+
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 /**
  * 获取value的值 index is 0-base
 */
 std::string SStable::getSStableValue(size_t index){
+    std::string retVal;
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
     
     uint64_t KVnum = this->getHeaderPtr()->keyValNum;
 
-    if(index >= KVnum)
+    if(index >= KVnum){
+        this->refreshCachePolicy(savedCachePolicy);
         return sstable_outOfRange;
+    }
     
     // 恰好是最后一个元素
     uint32_t offset = this->getIndexPtr()->getOffset(index);
     if(index + 1 == KVnum){
-        return this->getValuePtr()->getValFromFile(this->path, 
+        retVal = this->getValuePtr()->getValFromFile(this->path, 
             offset, this->fileSize - offset);
+        this->refreshCachePolicy(savedCachePolicy);
+        return retVal;
     }
     // 如果不是最后一个元素，那就可以通过两个元素的偏移量之差来计算读取的长度
 
     uint32_t offsetNext = this->getIndexPtr()->getOffset(index + 1);
    
-    
-    return this->getValuePtr()->getValFromFile(this->path, 
+    retVal = this->getValuePtr()->getValFromFile(this->path, 
         offset, offsetNext - offset);
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 
@@ -291,13 +350,24 @@ std::string SStable::getSStableValue(size_t index){
  * 检查一个key是否存在在sstable里面
 */
 bool SStable::checkIfKeyExist(uint64_t targetKey){
-    if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey)
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+
+    if(targetKey > getHeaderPtr()->maxKey || targetKey < getHeaderPtr()->minKey){
+        this->refreshCachePolicy(savedCachePolicy);
         return false;
-    if(this->cachePolicy[1] == true){
-        return getBloomFliterPtr()->find(targetKey);
     }
+        
+    if(this->cachePolicy[1] == true){
+        bool retVal =  getBloomFliterPtr()->find(targetKey);
+        this->refreshCachePolicy(savedCachePolicy);
+        return retVal;
+    }
+
+    this->refreshCachePolicy(savedCachePolicy);
     return true;
 }
+
 
 /**
  * 通过二分法查找某一个key是否存在
@@ -305,7 +375,13 @@ bool SStable::checkIfKeyExist(uint64_t targetKey){
  * @return 不存在就返回UINT32_MAX,否则返回偏移量
 */
 uint32_t SStable::getKeyIndexByKey(uint64_t key){
-    return getIndexPtr()->getKeyIndexByKey(key);
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+
+    uint32_t retVal = getIndexPtr()->getKeyIndexByKey(key);
+
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 /**
@@ -316,7 +392,13 @@ uint32_t SStable::getKeyIndexByKey(uint64_t key){
  * 边界2：如果key比最大的还要大，返回 UINT32_MAX (处理着需要考虑)
 */
 uint32_t SStable::getKeyOrLargerIndexByKey(uint64_t key){
-    return getIndexPtr()->getKeyOrLargerIndexByKey(key);
+    bool savedCachePolicy[4];
+    this->saveCachePolicy(savedCachePolicy);
+
+    uint32_t retVal = getIndexPtr()->getKeyOrLargerIndexByKey(key);
+
+    this->refreshCachePolicy(savedCachePolicy);
+    return retVal;
 }
 
 
@@ -375,9 +457,9 @@ void SStable::scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uin
 /**
  * 保存当前的缓存策略，保存到 savedCachePolicy
 */
-void SStable::saveCachePolicy(){
+void SStable::saveCachePolicy(bool (&saveTarget)[4]){
     for(int i = 0; i < 4; i++){
-        savedCachePolicy[i] = cachePolicy[i];
+        saveTarget[i] = cachePolicy[i];
     }
 }
 

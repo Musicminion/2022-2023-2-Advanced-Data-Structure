@@ -327,6 +327,7 @@ void KVStore::writeConfig(std::string path){
  * 检查完成之后，会尝试读取不同层里面可能存在的sst文件，如果有的话读取，没有的话不读取
 */
 void KVStore::sstFileCheck(std::string dataPath){
+
 	// 检查dataPath是否存在，没有的就创建
 	if(!utils::dirExists(dataPath))
 		utils::mkdir(dataPath.c_str());
@@ -347,7 +348,7 @@ void KVStore::sstFileCheck(std::string dataPath){
 		for(size_t i = 0; i <scanResult.size(); i++){
 			std::string fileName = scanResult[i];
 			std::string fileID = fileName.substr(0, fileName.find('.'));
-			
+
 			uint64_t fileIDNum = 0; 
 			std::istringstream iss(fileID); 
 			iss >> fileIDNum;
@@ -357,6 +358,7 @@ void KVStore::sstFileCheck(std::string dataPath){
 
 			// 初始化读取的时候，更新当前最大的时间戳
 			this->sstMaxTimeStamp = std::max(newTable->getSStableTimeStamp(), this->sstMaxTimeStamp);
+			
 			ssTableIndex[iter->first][fileIDNum] = newTable;
 		}
 	}

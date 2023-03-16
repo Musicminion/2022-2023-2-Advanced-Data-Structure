@@ -253,9 +253,8 @@ void crashTest(){
     else{  
         /* father process*/
         wait(&status);
-    }
-
-
+    }   
+    std::cout << "Construct Start\n";
     KVStore mystore("./data");
     std::cout << "GET/DEL Start\n";
     runGetPerformanceTest(ExistDataGourp, mystore);
@@ -267,7 +266,7 @@ void crashTest(){
 
 
 int main(){
-    runPerformanceTest();
+    crashTest();
 
     return 0;
 }

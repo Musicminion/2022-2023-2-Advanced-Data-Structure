@@ -15,8 +15,6 @@ private:
     std::string path;           // 文件的存储路径
     uint32_t fileSize;          // 文件的大小（单位Byte）
     bool cachePolicy[4];        // 各组成的缓存状态
-    bool savedCachePolicy[4];   // 因为可能由于某些操作会刷新缓存策略是
-                                // savedCachePolicy 用来保存和恢复缓存状态
 
     // SSTable由四部分组成，header、BF、索引、数据区域
     // 【警告】这些指针请不要直接调用，更不要修改，需要通过getXXXPtr访问
@@ -30,12 +28,12 @@ private:
     // 通过函数获取指针，最大的好处就是保证不需要手动创建，哪怕当前没有header
     // 由于某个原因需要读取，getHeaderPtr会自动修改缓存策略
     SSTheader * getHeaderPtr();
-    BloomFliter<uint64_t, sstable_bfSize > * getBloomFliterPtr();
+    BloomFliter<uint64_t, sstable_bfSize >* getBloomFliterPtr();
     SSTindex * getIndexPtr();
     SSTvalue * getValuePtr();
 
     // 在某些操作可能胡已修改缓存策略前，保存当前的缓存策略
-    void saveCachePolicy();
+    void saveCachePolicy(bool (&saveTarget)[4]);
 
 public:
 
