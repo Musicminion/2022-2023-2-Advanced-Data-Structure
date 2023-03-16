@@ -17,7 +17,7 @@ std::independent_bits_engine<std::default_random_engine, 64, uint64_t> e;
 
 // 数据集合，复杂度更高，评测更有效！
 // 如果添加空格字符，难度会增加！
-const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+=-{}[]:;<>?/";
+const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+=-{}[]:;<>?/,.|`~";
 
 // 最大的value字符串长度
 const uint64_t maxValLength = 1024 * 32;
@@ -213,6 +213,23 @@ double runDelPerformanceTest(std::map<uint64_t, std::string> &data, KVStore &kvs
 void runPerformanceTest(){
     std::map<uint64_t, std::string> ExistDataGourp;
     std::map<uint64_t, std::string> NoExistDataGroup;
+
+    KVStore mystore("./data");
+    mystore.reset();
+
+    runInsertPerformanceTest(ExistDataGourp, mystore);
+    runGetPerformanceTest(ExistDataGourp, mystore);
+    runDelPerformanceTest(ExistDataGourp, mystore);
+}
+
+
+
+/**
+ * 模拟崩溃的进行，先插入数据，然后子进程意外终止，然后父进程继续读写，
+*/
+void crashTest(){
+    std::map<uint64_t, std::string> ExistDataGourp;
+    std::map<uint64_t, std::string> NoExistDataGroup;
     
 
     // 运行性能测试！产生需要的数据集合，只需要产生 ExistDataGourp
@@ -221,19 +238,21 @@ void runPerformanceTest(){
     
     pid_t pid = fork();
     int status;
-    pid_t waitpid;
+
     
     if (pid == 0){
         /* child process */
         KVStore mystore("./data");
         mystore.reset();
         runInsertPerformanceTest(ExistDataGourp, mystore);
+
+        // 主动让进程崩溃。模拟突然出错的情况
         int a = 1 / 0;
         // return;
     }
     else{  
         /* father process*/
-        waitpid = wait(&status);
+        wait(&status);
     }
 
 
@@ -242,7 +261,6 @@ void runPerformanceTest(){
     runGetPerformanceTest(ExistDataGourp, mystore);
     runDelPerformanceTest(ExistDataGourp, mystore);
 }
-
 
 
 
