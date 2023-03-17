@@ -7,7 +7,7 @@
 #include <random>
 #include <map>
 #include <time.h>
-#include <wait.h>
+#include <iomanip>
 
 
 #include "kvstore.h"
@@ -69,6 +69,8 @@ uint64_t randUnInt64(uint64_t limit, bool ifReseed){
     return e() % limit;
 }
 
+uint64_t valueLength = 0;
+
 
 /**
  * 产生随机数据集合
@@ -87,29 +89,33 @@ uint64_t generateData(
     uint64_t valSize = 0;
     
     // 用来验证已经插入的数据集合
+    uint64_t genValLen = valueLength;
+
     std::map<uint64_t, bool> ExistKeyMap;
     uint64_t genKey = randUnInt64(UINT64_MAX, true);
-    uint64_t genValLen = randUnInt64(maxValLength, true);
+    // uint64_t genValLen = randUnInt64(maxValLength, true);
     std::string genVal = randString(genValLen, true);
 
+    
     // 产生存在数据集合
     for(size_t i = 0; i < existDataSize; i++){
         // 如果已经存在，那就再生成随机数
         while(ExistKeyMap.count(genKey) != 0){
             genKey = randUnInt64(UINT64_MAX, false);
-            genValLen = randUnInt64(maxValLength, false);
+            // genValLen = randUnInt64(maxValLength, false);
             genVal = randString(genValLen, false);
         }
 
         ExistKeyMap[genKey] = true;
         ExistDataGourp[genKey] = genVal;
+        
         valSize += genVal.size();
 
         // 产生下一个随机数
         bool ifReseed = (i % reSeedLength  == 0);
 
         genKey = randUnInt64(UINT64_MAX, ifReseed);
-        genValLen = randUnInt64(maxValLength, ifReseed);
+        // genValLen = randUnInt64(maxValLength, ifReseed);
         genVal = randString(genValLen, ifReseed);
     }
 
@@ -152,9 +158,45 @@ double runInsertPerformanceTest(std::map<uint64_t, std::string> &data, KVStore &
     // 计算起点和终止时间
     double insertTime = double(end-start) / CLOCKS_PER_SEC;
     // 返回插入的平均时间
-    std::cout << "runInsertPerformanceTest: avg time is"  << insertTime / data.size() << "s \n";
+    // std::cout << "runInsertPerformanceTest: avg time is"  << insertTime / data.size() << "s \n";
     return insertTime / data.size();
 }
+
+// double runInsertPerformanceTest(std::map<uint64_t, std::string> &data, KVStore &kvstore){
+//     if(data.size() == 0)
+//         return -1;
+//     std::vector<uint64_t> timeData;
+    
+//     uint64_t putTimes = 0;
+//     clock_t start,end;
+
+//     // 毫秒级别的时间戳获取
+// 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+//     std::chrono::microseconds msTime;
+//     msTime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+//     timeData.push_back(msTime.count());
+
+//     for(auto iter = data.begin(); iter != data.end(); iter++){
+//         kvstore.put(iter->first, iter->second);
+//         putTimes++;
+//         // 50次记录一次
+//         if(putTimes % 10 == 0){
+//             std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+//             msTime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+//             timeData.push_back(msTime.count());
+//         }
+//     }
+    
+//     for (size_t i = 0; i < timeData.size(); i++)
+//     {
+//         std::cout << timeData[i] << '\n';
+//     }
+    
+//     // 返回插入的平均时间
+//     // std::cout << "runInsertPerformanceTest: avg time is"  << insertTime / data.size() << "s \n";
+//     // return insertTime / data.size();
+//     return 1;
+// }
 
 
 /**
@@ -180,7 +222,7 @@ double runGetPerformanceTest(std::map<uint64_t, std::string> &data, KVStore &kvs
     // 计算起点和终止时间
     double getTime = double(end-start) / CLOCKS_PER_SEC;
 
-    std::cout << "runGetPerformanceTest: avg time is" <<  getTime / data.size() << "s \n";
+    // std::cout << "runGetPerformanceTest: avg time is" <<  getTime / data.size() << "s \n";
     // 返回插入的平均时间
     return getTime / data.size();
 }
@@ -202,7 +244,7 @@ double runDelPerformanceTest(std::map<uint64_t, std::string> &data, KVStore &kvs
     // 计算起点和终止时间
     double delTime = double(end-start) / CLOCKS_PER_SEC;
 
-    std::cout << "runDelPerformanceTest: avg time is" <<  delTime / data.size() << "s \n";
+    // std::cout << "runDelPerformanceTest: avg time is" <<  delTime / data.size() << "s \n";
     // 返回插入的平均时间
     return delTime / data.size();
 }
@@ -210,18 +252,27 @@ double runDelPerformanceTest(std::map<uint64_t, std::string> &data, KVStore &kvs
 /**
  * 运行性能测试，依次进行插入、查找、删除所有数据的操作，统计平均每个数据的查找时间。
  */ 
-void runPerformanceTest(){
+void runPerformanceTest(uint64_t kvnum){
     std::map<uint64_t, std::string> ExistDataGourp;
     std::map<uint64_t, std::string> NoExistDataGroup;
+
+    uint64_t dataSize = generateData(ExistDataGourp, NoExistDataGroup, kvnum, 0);
+    // std::cout << "Data-val Size(Byte) is: " << dataSize << "\n";
 
     KVStore mystore("./data");
     mystore.reset();
 
-    runInsertPerformanceTest(ExistDataGourp, mystore);
-    runGetPerformanceTest(ExistDataGourp, mystore);
-    runDelPerformanceTest(ExistDataGourp, mystore);
-}
+    
+    double val1 = runInsertPerformanceTest(ExistDataGourp, mystore);
+    double val2 = runGetPerformanceTest(ExistDataGourp, mystore);
+    double val3 = runDelPerformanceTest(ExistDataGourp, mystore);
 
+    std::cout << std::setiosflags(std::ios::scientific) << std::setprecision(4);
+
+    std::cout << "\\hline\n";
+    std::cout << valueLength  << " & $" << 1/val1 << "$ & $" << 1/val2  << "$ & $" << 1/val3 << "$ \\\\" <<std::endl;
+
+}
 
 
 /**
@@ -266,8 +317,13 @@ void crashTest(){
 
 
 int main(){
-    crashTest();
-
+    // int array[] = {32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
+    // for(int i = 0; i < 10; i++){
+    //     valueLength = array[i];
+    //     runPerformanceTest(1024 * 8);
+    // }
+    valueLength = 10240;
+    runPerformanceTest(1024 * 16);
     return 0;
 }
 

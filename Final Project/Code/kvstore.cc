@@ -11,11 +11,17 @@ const bool Leveling = 1;
 // 缓存策略
 const std::string confFilePath = "./default.conf";
 
-
+// 全部缓存
 bool cachePolicy[4] = {true, true, true, true};
 
+// 仅仅缓存索引
+// bool cachePolicy[4] = {true, false, true, true};
+
+// 不缓存
+// bool cachePolicy[4] = {false, false, false, true};
+
 KVStore::KVStore(const std::string &dir): KVStoreAPI(dir)
-{	
+{
 	// 初始化目录和已有的最大时间戳
 	this->dataDir = dir;
 	this->sstMaxTimeStamp = 0;
