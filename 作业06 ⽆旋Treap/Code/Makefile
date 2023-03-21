@@ -16,3 +16,4 @@ run: build
 
 gdb:
 	gdb $(BIN)
+

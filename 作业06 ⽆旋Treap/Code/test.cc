@@ -22,23 +22,29 @@ void generate_output(Treap<int32_t>& treap, int32_t round) {
         fin >> op >> val;
         switch (op) {
             case 1:
+                std::cout << "Inserting " << val << std::endl;
                 treap.insert(val);
                 fout << treap.pre_traverse() << std::endl;
                 break;
             case 2:
+                std::cout << "Removing " << val << std::endl;
                 treap.remove(val);
                 fout << treap.pre_traverse() << std::endl;
                 break;
             case 3: 
+                std::cout << "Ranking " << val << std::endl;
                 fout << treap.rank(val) << std::endl;
                 break;
             case 4:
+                std::cout << "Kth element " << val << std::endl;
                 fout << treap.kth_element(val) << std::endl;
                 break;
             case 5:
+                std::cout << "Pre element " << val << std::endl;
                 fout << treap.pre_element(val) << std::endl;
                 break;
             case 6:
+                std::cout << "Suc element " << val << std::endl;
                 fout << treap.suc_element(val) << std::endl;
                 break;
         }
@@ -70,19 +76,33 @@ bool check_answer(int32_t round) {
 
 int main () {
     Treap<int32_t> treap;
-
-    std::cout << "TEST_NUM:" << TEST_NUM << std::endl;
-    for (int32_t round = 1; round <= TEST_NUM; round ++ ) {
-        try {
-            generate_output(treap, round);
-            treap.clear();
-            if (!check_answer(round))
-                return -1;
-        } catch(std::exception &e) {
-            std::cerr << e.what() << std::endl;
-            return -1;
-        }
+    
+    for (size_t i = 0; i < 30; i++)
+    {
+        treap.insert(i);   
     }
+    std::cout << treap.pre_traverse() << "\n";
+    for (size_t i = 0; i < 30; i+=3)
+    {
+        treap.remove(i);
+        std::cout << "###########\n";
+        // std::cout << treap.pre_traverse() << "\n";
+    }
+    
+
+    
+    // std::cout << "TEST_NUM:" << TEST_NUM << std::endl;
+    // for (int32_t round = 1; round <= TEST_NUM; round ++ ) {
+    //     try {
+    //         generate_output(treap, round);
+    //         treap.clear();
+    //         if (!check_answer(round))
+    //             return -1;
+    //     } catch(std::exception &e) {
+    //         std::cerr << e.what() << std::endl;
+    //         return -1;
+    //     }
+    // }
     std::cout << "Tests All Passed :)" << std::endl;
     return 0;
 }

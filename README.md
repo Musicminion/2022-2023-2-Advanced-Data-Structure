@@ -12,6 +12,6 @@
 - 作业04：BloomFliter
 - 作业05：伸展树和AVL树
 - 大作业：LSM（日志结构合并树）
-- web-notes：网站形式的笔记（目前）
+- web-notes：网站形式的笔记（发布在 https://advanced-data-structure.netlify.app/）
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/cc8bbefd-3875-4513-9e48-d43e80af120b/deploy-status)](https://app.netlify.com/sites/advanced-data-structure/deploys)
