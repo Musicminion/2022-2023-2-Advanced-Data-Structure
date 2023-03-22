@@ -119,6 +119,7 @@ class Treap {
         // 将⼦树划分为⼩于val的sub左⼦树 和等于val的sub右⼦树
         // 就我已知这个tree里面全是 <= val 的值了，那我直接去找最大值就好了
         std::pair<TreapNode<T> *, TreapNode<T>* > splitForDelete(TreapNode<T> * rootNode,T splitVal){
+
             if(rootNode == nullptr){
                 return std::make_pair(nullptr, nullptr);
             }
@@ -136,10 +137,11 @@ class Treap {
             {
                 if(node->right->val == splitVal){
                     TreapNode<T> * nodeLeft = node->right->left;
+                    TreapNode<T> * nodeRight = node->right;;
                     node->right->left = nullptr;
                     node->right->size = (node->right->left ? node->right->left->size : 0) + (node->right->right ? node->right->right->size : 0) + 1;
                     node->right = nodeLeft;
-                    return std::make_pair(rootNode, node->right);
+                    return std::make_pair(rootNode, nodeRight);
                 }
                 node = node->right;
             }
@@ -219,22 +221,8 @@ class Treap {
             // findResult->count == 1 开始删除节点
             // 1. 以val为界限，把树分割成两个树
             std::pair<TreapNode<T> *, TreapNode<T>* > result1 = split(treap_root, val);
-
-            
-            std::cout << "\n result1.first ";
-            this->print(result1.first);
-            std::cout << "\n result1.second ";
-            this->print(result1.second);
-
             // 2. 将左⼦树划分为⼩于val的sub左⼦树(图中LeftLeftRoot)和等于val的sub右⼦树
             std::pair<TreapNode<T> *, TreapNode<T>* > result2 = splitForDelete(result1.first, val);
-
-            std::cout << "\n result2.first ";
-            this->print(result2.first);
-            std::cout << "\n result2.second ";
-            this->print(result2.second);
-            std::cout << std::endl;
-
 
             if(result2.second != nullptr){
                 result2.second->count = result2.second->count - 1;
