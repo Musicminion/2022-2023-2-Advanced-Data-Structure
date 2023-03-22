@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cassert>
 #include <string>
+#include <vector>
 #include <utility>
 
 class RandGenerator {
@@ -106,12 +107,20 @@ class Treap {
                 std::pair<TreapNode<T> *, TreapNode<T>* > result = split(rootNode->right, splitVal);
                 rootNode->right = result.first;
                 rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
+                if(result.first != nullptr)
+                    result.first->size = (result.first->left ? result.first->left->size : 0) + (result.first->right ? result.first->right->size : 0) + 1;
+                if(result.second != nullptr)
+                    result.second->size = (result.second->left ? result.second->left->size : 0) + (result.second->right ? result.second->right->size : 0) + 1;
                 return std::make_pair(rootNode, result.second);
             }
             else{
                 std::pair<TreapNode<T> *, TreapNode<T>* > result = split(rootNode->left, splitVal);
                 rootNode->left = result.second;
                 rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
+                if(result.first != nullptr)
+                    result.first->size = (result.first->left ? result.first->left->size : 0) + (result.first->right ? result.first->right->size : 0) + 1;
+                if(result.second != nullptr)
+                    result.second->size = (result.second->left ? result.second->left->size : 0) + (result.second->right ? result.second->right->size : 0) + 1;
                 return std::make_pair(result.first, rootNode);
             }
         }
@@ -119,7 +128,6 @@ class Treap {
         // 将⼦树划分为⼩于val的sub左⼦树 和等于val的sub右⼦树
         // 就我已知这个tree里面全是 <= val 的值了，那我直接去找最大值就好了
         std::pair<TreapNode<T> *, TreapNode<T>* > splitForDelete(TreapNode<T> * rootNode,T splitVal){
-
             if(rootNode == nullptr){
                 return std::make_pair(nullptr, nullptr);
             }
@@ -132,9 +140,12 @@ class Treap {
             }
 
             TreapNode<T>* node = rootNode;
+            std::vector<TreapNode<T>* > path;
+            path.push_back(node);
 
             while (node->right != nullptr)
             {
+                path.push_back(node->right);
                 if(node->right->val == splitVal){
                     TreapNode<T> * partLeft = node->right->left;
                     TreapNode<T> * partRight = node->right;
@@ -142,6 +153,12 @@ class Treap {
                     // node->right->size = (node->right->left ? node->right->left->size : 0) + (node->right->right ? node->right->right->size : 0) + 1;
                     node->right = partLeft;
                     node->size = (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0) + 1;
+                    partRight->size = (partRight->left ? partRight->left->size : 0) + (partRight->right ? partRight->right->size : 0) + 1;
+                    
+                    // 更新size
+                    for(int i = path.size() - 2; i >= 0; i--){
+                        path[i]->size = (path[i]->left ? path[i]->left->size : 0) + (path[i]->right ? path[i]->right->size : 0) + 1;
+                    }
                     return std::make_pair(rootNode, partRight);
                 }
                 node = node->right;
@@ -149,6 +166,7 @@ class Treap {
             
             return std::make_pair(rootNode, nullptr);
             
+            // 递归的写法
             // if(rootNode->val == splitVal){
             //     TreapNode<T> * nodeLeft = rootNode->left;
             //     rootNode->left = nullptr;
@@ -323,6 +341,7 @@ class Treap {
 
         int32_t kth_element(int32_t rk) {
             /* Your code here. */
+            int32_t result = findKth_element(treap_root, rk);
             return findKth_element(treap_root, rk);
         }
 
@@ -363,10 +382,8 @@ class Treap {
             std::cout << node->val << " ";
             print(node->left);
             print(node->right);
-
         }
-
-
+        
 
         std::string pre_traverse() {
             /* Your code here. */
@@ -379,4 +396,24 @@ class Treap {
                 result.pop_back();
             return result;
         }
+
+        // void sizeTraversal(TreapNode<T>* node){
+        //     if(node == nullptr){
+        //         return;
+        //     }
+        //     std::cout << node->size << " ";
+        //     sizeTraversal(node->left);
+        //     sizeTraversal(node->right);
+        //     int correctSize = (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0) + 1;
+        //     if(correctSize != node->size){
+        //         std::cout << "!!!!!!!!!!寄了\n";
+        //         node->size = correctSize;
+        //     }
+                
+        // }
+
+        // void test(){
+        //     std::cout << "开测！";
+        //     sizeTraversal(treap_root);
+        // }
 };

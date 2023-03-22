@@ -76,21 +76,6 @@ bool check_answer(int32_t round) {
 
 int main () {
     Treap<int32_t> treap;
-    
-    // for (size_t i = 0; i < 30; i++)
-    // {
-    //     treap.insert(i);   
-    // }
-    // std::cout << treap.pre_traverse() << "\n";
-    // for (size_t i = 0; i < 30; i+=3)
-    // {
-    //     treap.remove(i);
-    //     std::cout << "###########\n";
-    //     // std::cout << treap.pre_traverse() << "\n";
-    // }
-    
-
-    
     std::cout << "TEST_NUM:" << TEST_NUM << std::endl;
     for (int32_t round = 1; round <= TEST_NUM; round ++ ) {
         try {
