@@ -136,12 +136,13 @@ class Treap {
             while (node->right != nullptr)
             {
                 if(node->right->val == splitVal){
-                    TreapNode<T> * nodeLeft = node->right->left;
-                    TreapNode<T> * nodeRight = node->right;;
-                    node->right->left = nullptr;
-                    node->right->size = (node->right->left ? node->right->left->size : 0) + (node->right->right ? node->right->right->size : 0) + 1;
-                    node->right = nodeLeft;
-                    return std::make_pair(rootNode, nodeRight);
+                    TreapNode<T> * partLeft = node->right->left;
+                    TreapNode<T> * partRight = node->right;
+                    partRight->left = nullptr;
+                    // node->right->size = (node->right->left ? node->right->left->size : 0) + (node->right->right ? node->right->right->size : 0) + 1;
+                    node->right = partLeft;
+                    node->size = (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0) + 1;
+                    return std::make_pair(rootNode, partRight);
                 }
                 node = node->right;
             }
@@ -279,9 +280,9 @@ class Treap {
                 return -1;
             }
             if(node->val == val){
-                return (node->left ? node->left->size : 0);
+                return (node->left ? node->left->size : 0) + 1;
             }
-            else if(node->val > val){
+            else if(node->val < val){
                 return (node->left ? node->left->size : 0) + 1 + findValRank(val, node->right);
             }
             else{
@@ -293,6 +294,9 @@ class Treap {
         // 查询val的排名
         int32_t rank(T val) {
             /* Your code here. */
+            if(this->find(treap_root, val) == nullptr){
+                return -1;
+            }
             return findValRank(val, treap_root);
         }
 
@@ -307,11 +311,14 @@ class Treap {
             else if(node->left != nullptr && rk == node->left->size + 1){
                 return node->val;
             }
+            else if(node->left != nullptr && rk < node->left->size + 1){
+                return findKth_element(node->left, rk);
+            }
             else if(node->left == nullptr && rk == 1){
                 return node->val;
             }
             else
-                return findKth_element(node->left, rk);
+                return findKth_element(node->right, rk - 1);
         }
 
         int32_t kth_element(int32_t rk) {
