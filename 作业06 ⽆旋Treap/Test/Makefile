@@ -19,3 +19,7 @@ analysis:
 	gprof test gmon.out -b >> result-16384.txt
 	./test 65536 >> result.csv
 	gprof test gmon.out -b >> result-65536.txt
+	./test 262144 >> result.csv
+	gprof test gmon.out -b >> result-262144.txt
+	./test 1048576 >> result.csv
+	gprof test gmon.out -b >> result-1048576.txt
