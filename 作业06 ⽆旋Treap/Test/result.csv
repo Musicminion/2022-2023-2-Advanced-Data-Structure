@@ -1,12 +1,7 @@
 dataSize,insertTime,searchTime,height,deleteTime
 1024,3409348,1049612,26,3589714
-dataSize,insertTime,searchTime,height,deleteTime
 4096,15165088,4099824,30,14913926
-dataSize,insertTime,searchTime,height,deleteTime
 16384,67646452,20195294,32,65121098
-dataSize,insertTime,searchTime,height,deleteTime
 65536,314651268,101161684,39,296651666
-dataSize,insertTime,searchTime,height,deleteTime
 262144,1419886106,641984332,48,1727484320
-dataSize,insertTime,searchTime,height,deleteTime
 1048576,6121362440,2306860906,50,6926739624
