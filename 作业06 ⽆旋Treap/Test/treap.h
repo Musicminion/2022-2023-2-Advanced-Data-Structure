@@ -71,6 +71,10 @@ class Treap {
                 return find(rootNode->right, val);
         }
 
+        TreapNode<T> * search(T val) {
+            return find(treap_root, val);
+        }
+
         TreapNode<T> * merge(TreapNode<T> * leftTree, TreapNode<T> * rightTree){
             // 如果左右有一个不是空的，直接返回
             if(leftTree == nullptr && rightTree != nullptr) {
@@ -395,6 +399,17 @@ class Treap {
             if(result[result.size() - 1] == ' ')
                 result.pop_back();
             return result;
+        }
+
+        uint64_t calculateHeight(TreapNode<T>* node){
+            if(node == nullptr){
+                return 0;
+            }
+            return std::max(calculateHeight(node->left), calculateHeight(node->right)) + 1;
+        }
+
+        uint64_t getHeight(){
+            return calculateHeight(treap_root);
         }
 
         // void sizeTraversal(TreapNode<T>* node){
