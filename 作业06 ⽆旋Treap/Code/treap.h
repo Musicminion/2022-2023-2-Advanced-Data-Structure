@@ -187,7 +187,7 @@ class Treap {
         }
 
 
-        void insert(T val) { 
+        void insert(T val) {
             /* Your code here. */
             // 空的树就直接插入
             if(treap_root == nullptr){
@@ -397,23 +397,4 @@ class Treap {
             return result;
         }
 
-        // void sizeTraversal(TreapNode<T>* node){
-        //     if(node == nullptr){
-        //         return;
-        //     }
-        //     std::cout << node->size << " ";
-        //     sizeTraversal(node->left);
-        //     sizeTraversal(node->right);
-        //     int correctSize = (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0) + 1;
-        //     if(correctSize != node->size){
-        //         std::cout << "!!!!!!!!!!寄了\n";
-        //         node->size = correctSize;
-        //     }
-                
-        // }
-
-        // void test(){
-        //     std::cout << "开测！";
-        //     sizeTraversal(treap_root);
-        // }
 };
