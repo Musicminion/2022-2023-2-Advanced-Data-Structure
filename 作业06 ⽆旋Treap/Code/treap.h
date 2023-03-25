@@ -88,13 +88,13 @@ class Treap {
             // 右⼦树递归合并到左⼦树的右⼉⼦中
             if(leftTree->weight >= rightTree->weight){
                 leftTree->right = merge(leftTree->right, rightTree);
-                leftTree->size = (leftTree->left? leftTree->left->size : 0) + (leftTree->right ? leftTree->right->size : 0) + 1;
+                leftTree->size = (leftTree->left? leftTree->left->size : 0) + (leftTree->right ? leftTree->right->size : 0) + leftTree->count;
                 return leftTree;
             }
             // 反之，左⼦树递归合并到右⼦树的左⼉⼦中
             else{
                 rightTree->left = merge(leftTree, rightTree->left);
-                rightTree->size = (rightTree->left? rightTree->left->size : 0) + (rightTree->right ? rightTree->right->size : 0) + 1;
+                rightTree->size = (rightTree->left? rightTree->left->size : 0) + (rightTree->right ? rightTree->right->size : 0) + rightTree->count;
                 return rightTree;
             }
         }
@@ -106,21 +106,21 @@ class Treap {
             if(rootNode->val <= splitVal){
                 std::pair<TreapNode<T> *, TreapNode<T>* > result = split(rootNode->right, splitVal);
                 rootNode->right = result.first;
-                rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
+                rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + rootNode->count;
                 if(result.first != nullptr)
-                    result.first->size = (result.first->left ? result.first->left->size : 0) + (result.first->right ? result.first->right->size : 0) + 1;
+                    result.first->size = (result.first->left ? result.first->left->size : 0) + (result.first->right ? result.first->right->size : 0) + result.first->count;
                 if(result.second != nullptr)
-                    result.second->size = (result.second->left ? result.second->left->size : 0) + (result.second->right ? result.second->right->size : 0) + 1;
+                    result.second->size = (result.second->left ? result.second->left->size : 0) + (result.second->right ? result.second->right->size : 0) + result.second->count;
                 return std::make_pair(rootNode, result.second);
             }
             else{
                 std::pair<TreapNode<T> *, TreapNode<T>* > result = split(rootNode->left, splitVal);
                 rootNode->left = result.second;
-                rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
+                rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + rootNode->count;
                 if(result.first != nullptr)
-                    result.first->size = (result.first->left ? result.first->left->size : 0) + (result.first->right ? result.first->right->size : 0) + 1;
+                    result.first->size = (result.first->left ? result.first->left->size : 0) + (result.first->right ? result.first->right->size : 0) + result.first->count;
                 if(result.second != nullptr)
-                    result.second->size = (result.second->left ? result.second->left->size : 0) + (result.second->right ? result.second->right->size : 0) + 1;
+                    result.second->size = (result.second->left ? result.second->left->size : 0) + (result.second->right ? result.second->right->size : 0) + result.second->count;
                 return std::make_pair(result.first, rootNode);
             }
         }
@@ -135,7 +135,7 @@ class Treap {
             if(rootNode->val == splitVal){
                 TreapNode<T> * nodeLeft = rootNode->left;
                 rootNode->left = nullptr;
-                rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
+                rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + rootNode->count;
                 return std::make_pair(nodeLeft, rootNode);
             }
 
@@ -152,12 +152,12 @@ class Treap {
                     partRight->left = nullptr;
                     // node->right->size = (node->right->left ? node->right->left->size : 0) + (node->right->right ? node->right->right->size : 0) + 1;
                     node->right = partLeft;
-                    node->size = (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0) + 1;
-                    partRight->size = (partRight->left ? partRight->left->size : 0) + (partRight->right ? partRight->right->size : 0) + 1;
+                    node->size = (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0) + node->count;
+                    partRight->size = (partRight->left ? partRight->left->size : 0) + (partRight->right ? partRight->right->size : 0) + partRight->count;
                     
                     // 更新size
                     for(int i = path.size() - 2; i >= 0; i--){
-                        path[i]->size = (path[i]->left ? path[i]->left->size : 0) + (path[i]->right ? path[i]->right->size : 0) + 1;
+                        path[i]->size = (path[i]->left ? path[i]->left->size : 0) + (path[i]->right ? path[i]->right->size : 0) + path[i]->count;
                     }
                     return std::make_pair(rootNode, partRight);
                 }
@@ -166,26 +166,30 @@ class Treap {
             
             return std::make_pair(rootNode, nullptr);
             
-            // 递归的写法
-            // if(rootNode->val == splitVal){
-            //     TreapNode<T> * nodeLeft = rootNode->left;
-            //     rootNode->left = nullptr;
-            //     rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
-
-            //     return std::make_pair(nodeLeft, rootNode);
-            // }
-
-            // std::pair<TreapNode<T> *, TreapNode<T>* > result = splitForDelete(rootNode->right, splitVal);
-            // if(result.first != nullptr){
-            //     rootNode->right = result.first;
-            //     rootNode->size = (rootNode->left ? rootNode->left->size : 0) + (rootNode->right ? rootNode->right->size : 0) + 1;
-            //     return std::make_pair(rootNode, result.second);
-            // }
-            // else
-            //     result.first = rootNode;
-            // return std::make_pair(result.first, result.second);
         }
 
+        TreapNode<T>* sizeRefresh(TreapNode<T>* root, T val){
+            if(root == nullptr){
+                return nullptr;
+            }
+            if(root->val == val){
+                root->size = (root->left ? root->left->size : 0) + (root->right ? root->right->size : 0) + root->count;
+                // std::cout << "after update " << root->val << " " << root->size << std::endl;
+                return root;
+            }
+            else if(root->val < val){
+                TreapNode<T>* result = sizeRefresh(root->right, val);
+                root->size = (root->left ? root->left->size : 0) + (root->right ? root->right->size : 0) + root->count;
+                // std::cout << "after update " << root->val << " " << root->size << std::endl;
+                return result;
+            }
+            else{
+                TreapNode<T>* result = sizeRefresh(root->left, val);
+                root->size = (root->left ? root->left->size : 0) + (root->right ? root->right->size : 0) + root->count;
+                // std::cout << "after update " << root->val << " " << root->size << std::endl;
+                return result;
+            }
+        }
 
         void insert(T val) {
             /* Your code here. */
@@ -206,6 +210,8 @@ class Treap {
 
             if(findResult != nullptr){
                 findResult->count = findResult->count + 1;
+                findResult->size = findResult->size + 1;
+                sizeRefresh(treap_root, val);
                 return;
             }
 
@@ -234,6 +240,8 @@ class Treap {
             }
             if(findResult->count > 1){
                 findResult->count = findResult->count - 1;
+                findResult->size = findResult->size - 1;
+                sizeRefresh(treap_root, val);
                 return;
             }
 
@@ -301,7 +309,7 @@ class Treap {
                 return (node->left ? node->left->size : 0) + 1;
             }
             else if(node->val < val){
-                return (node->left ? node->left->size : 0) + 1 + findValRank(val, node->right);
+                return (node->left ? node->left->size : 0) + node->count + findValRank(val, node->right);
             }
             else{
                 return findValRank(val, node->left);
@@ -323,20 +331,20 @@ class Treap {
             if(node == nullptr || rk <= 0 || rk > node->size){
                 return -1;
             }
-            else if(node->left != nullptr && rk > node->left->size + 1){
-                return findKth_element(node->right, rk - node->left->size - 1);
+            else if(node->left != nullptr && rk > node->left->size + node->count){
+                return findKth_element(node->right, rk - node->left->size - node->count);
             }
-            else if(node->left != nullptr && rk == node->left->size + 1){
+            else if(node->left != nullptr && rk <= node->left->size + node->count && rk > node->left->size){
                 return node->val;
             }
-            else if(node->left != nullptr && rk < node->left->size + 1){
+            else if(node->left != nullptr && rk <= node->left->size){
                 return findKth_element(node->left, rk);
             }
-            else if(node->left == nullptr && rk == 1){
+            else if(node->left == nullptr && rk <= node->count){
                 return node->val;
             }
             else
-                return findKth_element(node->right, rk - 1);
+                return findKth_element(node->right, rk - node->count);
         }
 
         int32_t kth_element(int32_t rk) {
