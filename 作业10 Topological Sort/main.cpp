@@ -60,8 +60,10 @@ public:
             }
             sort(willPopBuffer.begin(), willPopBuffer.end());
             for (int i = 0; i < willPopBuffer.size(); i++) {
+                cout << willPopBuffer[i] + 1 << " ";
                 res.push_back(willPopBuffer[i]);
             }
+            cout << endl;
 
             for (int i = 0; i < willPopBuffer.size(); i++) {
                 int node = willPopBuffer[i];
@@ -78,9 +80,12 @@ public:
             }
 
             sort(willPushBuffer.begin(), willPushBuffer.end());
+
             for (int i = 0; i < willPushBuffer.size(); i++) {
+                
                 q.push(willPushBuffer[i]);
             }
+            
         }
 
         // 如果结果序列的长度小于节点数，则说明图中存在环
@@ -181,8 +186,8 @@ int main() {
     graph.add_edge_1Base(13, 10);
 
     
-    vector<int> res = graph.topological_sort();
-    // vector<int> res = graph.topological_sortForPartOne();
+    // vector<int> res = graph.topological_sort();
+    vector<int> res = graph.topological_sortForPartOne();
 
     for (int i = 0; i < res.size(); i++) {
         cout << res[i] + 1 << " ";
