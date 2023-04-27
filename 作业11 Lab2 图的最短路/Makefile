@@ -6,4 +6,7 @@ all:graph
 clean:
 	rm -f *.o graph
 
+test:
+	./graph < data
+
 .PHONY: clean
