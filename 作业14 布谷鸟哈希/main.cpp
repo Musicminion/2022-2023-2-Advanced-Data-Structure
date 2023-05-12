@@ -41,7 +41,7 @@ long long int serializePUTTest(long long int capacity, long long int insertSize)
         }
 
         insertMap[key] = key;
-        insertList.push_back(key);
+        insertList.emplace_back(key);
     }
     
     
@@ -92,7 +92,7 @@ long long int parallelPUTTest(int threadNum,long long int capacity, long long in
         }
 
         insertMap[key] = key;
-        insertList.push_back(key);
+        insertList.emplace_back(key);
     }
 
     // 开始计时
@@ -101,7 +101,7 @@ long long int parallelPUTTest(int threadNum,long long int capacity, long long in
     // 插入
     std::vector<std::thread> threads;
     for (int i = 0; i < threadNum; i++) {
-        threads.push_back(std::thread([&cuckoo, &insertList, i, threadNum](){
+        threads.emplace_back(std::thread([&cuckoo, &insertList, i, threadNum](){
             for (int j = i; j < insertList.size(); j += threadNum) {
                 cuckoo.put(insertList[j]);
             }
@@ -151,7 +151,7 @@ long long int serializeGETTest(long long int capacity, long long int insertSize)
         }
 
         insertMap[key] = key;
-        insertList.push_back(key);
+        insertList.emplace_back(key);
     }
 
     // 插入
@@ -206,7 +206,7 @@ long long int parallelGETTest(int threadNum,long long int capacity, long long in
         }
 
         insertMap[key] = key;
-        insertList.push_back(key);
+        insertList.emplace_back(key);
     }
 
 
@@ -221,7 +221,7 @@ long long int parallelGETTest(int threadNum,long long int capacity, long long in
     // 查找
     std::vector<std::thread> threads;
     for (int i = 0; i < threadNum; i++) {
-        threads.push_back(std::thread([&cuckoo, &insertList, i, threadNum](){
+        threads.emplace_back(std::thread([&cuckoo, &insertList, i, threadNum](){
             for (int j = i; j < insertList.size(); j += threadNum) {
                 cuckoo.get(insertList[j]);
             }
@@ -278,50 +278,57 @@ long long int parallelGETTest_Wrap(int threadNum,long long int capacity, long lo
 
 
 int main(){
+    int base = serializeGETTest_Wrap(100000, 10000);
+    int a = parallelGETTest_Wrap(1, 100000, 10000);
+    int b = parallelGETTest_Wrap(2, 100000, 10000);
+    std::cout << base << std::endl;
+    std::cout << a << std::endl;
+    std::cout << b << std::endl;
     
-    // 打开文件
-    std::ofstream outfile;
-    outfile.open("data-10000-GET.csv", std::ios::out | std::ios::trunc);
-    outfile << "threadNum,insertSize,time,rate" << std::endl;
-    long long int base = serializeGETTest_Wrap(100000, 10000);
-    for(int i = 1; i <= 32; i++){
-        int result = parallelGETTest_Wrap(i, 100000, 10000);
-        outfile << i << "," << 10000 << "," << result << "," << (double)result / base << std::endl;
-    }
-    outfile.close();
+
+    // // 打开文件
+    // std::ofstream outfile;
+    // outfile.open("data-10000-GET.csv", std::ios::out | std::ios::trunc);
+    // outfile << "threadNum,insertSize,time,rate" << std::endl;
+    // long long int base = serializeGETTest_Wrap(100000, 10000);
+    // for(int i = 1; i <= 32; i++){
+    //     int result = parallelGETTest_Wrap(i, 100000, 10000);
+    //     outfile << i << "," << 10000 << "," << result << "," << (double)result / base << std::endl;
+    // }
+    // outfile.close();
 
 
-    // 打开文件
-    outfile.open("data-50000-GET.csv", std::ios::out | std::ios::trunc);
-    outfile << "threadNum,insertSize,time,rate" << std::endl;
-    base = serializeGETTest_Wrap(100000, 50000);
-    for(int i = 1; i <= 32; i++){
-        int result = parallelGETTest_Wrap(i, 100000, 50000);
-        outfile << i << "," << 50000 << "," << result << "," << (double)result / base << std::endl;
-    }
-    outfile.close();
+    // // 打开文件
+    // outfile.open("data-50000-GET.csv", std::ios::out | std::ios::trunc);
+    // outfile << "threadNum,insertSize,time,rate" << std::endl;
+    // base = serializeGETTest_Wrap(100000, 50000);
+    // for(int i = 1; i <= 32; i++){
+    //     int result = parallelGETTest_Wrap(i, 100000, 50000);
+    //     outfile << i << "," << 50000 << "," << result << "," << (double)result / base << std::endl;
+    // }
+    // outfile.close();
 
 
-    // 打开文件
-    outfile.open("data-10000-PUT.csv", std::ios::out | std::ios::trunc);
-    outfile << "threadNum,insertSize,time,rate" << std::endl;
-    base = serializePUTTest_Wrap(100000, 10000);
-    for(int i = 1; i <= 32; i++){
-        int result = parallelPUTTest_Wrap(i, 100000, 10000);
-        outfile << i << "," << 10000 << "," << result << "," << (double)result / base << std::endl;
-    }
-    outfile.close();
+    // // 打开文件
+    // outfile.open("data-10000-PUT.csv", std::ios::out | std::ios::trunc);
+    // outfile << "threadNum,insertSize,time,rate" << std::endl;
+    // base = serializePUTTest_Wrap(100000, 10000);
+    // for(int i = 1; i <= 32; i++){
+    //     int result = parallelPUTTest_Wrap(i, 100000, 10000);
+    //     outfile << i << "," << 10000 << "," << result << "," << (double)result / base << std::endl;
+    // }
+    // outfile.close();
 
 
-    // 打开文件
-    outfile.open("data-50000-PUT.csv", std::ios::out | std::ios::trunc);
-    outfile << "threadNum,insertSize,time,rate" << std::endl;
-    base = serializePUTTest_Wrap(100000, 50000);
-    for(int i = 1; i <= 32; i++){
-        int result = parallelPUTTest_Wrap(i, 100000, 50000);
-        outfile << i << "," << 50000 << "," << result << "," << (double)result / base << std::endl;
-    }
+    // // 打开文件
+    // outfile.open("data-50000-PUT.csv", std::ios::out | std::ios::trunc);
+    // outfile << "threadNum,insertSize,time,rate" << std::endl;
+    // base = serializePUTTest_Wrap(100000, 50000);
+    // for(int i = 1; i <= 32; i++){
+    //     int result = parallelPUTTest_Wrap(i, 100000, 50000);
+    //     outfile << i << "," << 50000 << "," << result << "," << (double)result / base << std::endl;
+    // }
 
-    outfile.close();
+    // outfile.close();
     return 0;
 }
