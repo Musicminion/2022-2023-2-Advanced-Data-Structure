@@ -15,6 +15,12 @@
 - 作业07：红黑树
 - 作业08：KD Tree
 - 作业09：Select
+- 作业10 Topological Sort
+- 作业11 Lab2 图的最短路
+- 作业12 Dijkstra算法
+- 作业13 KMP和并发编程
+- 作业14 布谷鸟哈希
+- 作业15 Lab3 并行
 - 大作业：LSM（日志结构合并树）
 - web-notes：网站形式的笔记（发布在 https://advanced-data-structure.netlify.app/ ）
 
