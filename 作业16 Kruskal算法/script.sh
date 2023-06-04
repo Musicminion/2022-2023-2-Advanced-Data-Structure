@@ -18,6 +18,21 @@
 ./serial < 10000_100000.txt
 ./serial < 10000_1000000.txt
 
+
+# 并行
+./parallel < 2000_10000.txt
+./parallel < 2000_100000.txt
+./parallel < 2000_1000000.txt
+
+./parallel < 5000_10000.txt
+./parallel < 5000_100000.txt
+./parallel < 5000_1000000.txt
+
+./parallel < 10000_10000.txt
+./parallel < 10000_100000.txt
+./parallel < 10000_1000000.txt
+
+
 # 6 9
 # 1 2 1
 # 1 6 2

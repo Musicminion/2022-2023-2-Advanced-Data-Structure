@@ -64,7 +64,6 @@ int main(){
     for (int i = 0; i < m; i++){
         cin >> edges[i].u >> edges[i].v >> edges[i].w;
     }
-        
 
     // 开始计时
     clock_t start = clock();
@@ -85,18 +84,6 @@ int main(){
     // 写入顶点数和边数
     outFile << n << "," << m << "," << (double)(end - start) / CLOCKS_PER_SEC << endl;
     outFile.close();
-
-    // ofstream outFile("result.txt", ios::app);
-    // if (!outFile) {
-    //     cerr << "Failed to create file: result.txt" << endl;
-    //     return 0;
-    // }
-
-    // // 写入顶点数和边数
-    // outFile << n << "," << m << "," << (double)(end - start) / CLOCKS_PER_SEC << endl;
-
-    // // 关闭文件
-    // outFile.close();
 
     return 0;
 }
